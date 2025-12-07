@@ -16,7 +16,7 @@ import colorsys
 def parse_base32_float(s: str) -> float:
     """
     Parse MPFR base-32 format to float for visualization purposes.
-    Supports formats: "1a", "1.a", "1a@2", "-1.a"
+    Supports formats: "1a", "1.a", "-1.a"
     
     Args:
         s: Base-32 string

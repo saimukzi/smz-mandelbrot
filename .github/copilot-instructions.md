@@ -35,7 +35,6 @@ Use `python3` (not `python`) - the system only has python3 available. The projec
 ### Syntax
 - Decimal notation: `0.g` (16/32 = 0.5), `-1.a` 
 - Integer: `1`, `2`, `b` (11 in decimal)
-- Exponent: `1@2` = 1×32² = 1024, `g@-1` = 16×32⁻¹ = 0.5
 - Zero: `0`
 
 ### Key Conversion Functions

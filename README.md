@@ -113,7 +113,6 @@ Both tools use **MPFR base-32 format** for arbitrary precision:
 Accepts multiple base-32 formats:
 - **Decimal notation**: `1a.b` or `-0.g` (with decimal point) - e.g., `b` = 11, `-0.g` = -0.5
 - **Integer notation**: `1a` (without decimal point) - e.g., `b` = 11
-- **Exponent notation**: `1a@2` (mantissa × 32^exponent) - e.g., `-g@-1` = -0.5
 - **Zero**: `0`
 
 ### Output Format

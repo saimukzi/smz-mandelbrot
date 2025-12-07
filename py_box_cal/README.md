@@ -40,13 +40,13 @@ python3 box_calculator.py <min_ca> <min_cb> <max_ca> <max_cb> <resolution> <star
 
 | Argument | Description | Format |
 |----------|-------------|--------|
-| `<min_ca>` | Minimum real part of c | Base-32 (decimal, integer, or exponent notation) |
-| `<min_cb>` | Minimum imaginary part of c | Base-32 (decimal, integer, or exponent notation) |
-| `<max_ca>` | Maximum real part of c | Base-32 (decimal, integer, or exponent notation) |
-| `<max_cb>` | Maximum imaginary part of c | Base-32 (decimal, integer, or exponent notation) |
+| `<min_ca>` | Minimum real part of c | Base-32 (decimal or integer notation) |
+| `<min_cb>` | Minimum imaginary part of c | Base-32 (decimal or integer notation) |
+| `<max_ca>` | Maximum real part of c | Base-32 (decimal or integer notation) |
+| `<max_cb>` | Maximum imaginary part of c | Base-32 (decimal or integer notation) |
 | `<resolution>` | Grid points per axis (N×N grid) | Integer |
 | `<start_max_iterations>` | Initial iteration limit | Integer |
-| `<escape_radius>` | Escape radius R | Base-32 (decimal, integer, or exponent notation) |
+| `<escape_radius>` | Escape radius R | Base-32 (decimal or integer notation) |
 | `<output_path>` | Output CSV file path | String |
 
 ### Example
@@ -64,7 +64,7 @@ Calculate a high-resolution zoom into an interesting region:
 python3 box_calculator.py -0.8 -0.2 -0.7 -0.1 50 1000 2 zoom_region.csv
 ```
 
-**Note:** Input accepts flexible base-32 formats (decimal like `-0.g`, integer like `b`, or exponent like `-g@-1`).
+**Note:** Input accepts flexible base-32 formats (decimal like `-0.g` or integer like `b`).
 
 ## Output Format
 

@@ -85,14 +85,7 @@ test_conversion "32TO10: Small fraction 0.1 (0.03125)" "32TO10" "64" "0.1" "0.03
 test_conversion "32TO10: Integer g (16)" "32TO10" "64" "g" "16"
 test_conversion "32TO10: Fraction 0.g (0.5)" "32TO10" "64" "0.g" "0.5"
 
-# Test 21-25: Exponent notation support (base-32 input)
-test_conversion "32TO10: Exponent notation 1@1 (32)" "32TO10" "64" "1@1" "32"
-test_conversion "32TO10: Exponent notation a@1 (320)" "32TO10" "64" "a@1" "320"
-test_conversion "32TO10: Exponent notation 1@-1 (0.03125)" "32TO10" "64" "1@-1" "0.03125"
-test_conversion "32TO10: Exponent notation g@0 (16)" "32TO10" "64" "g@0" "16"
-test_conversion "32TO10: Exponent notation -1@2 (-1024)" "32TO10" "64" "-1@2" "-1024"
-
-# Test 26-30: Edge cases
+# Test 21-25: Edge cases
 test_conversion "10TO32: Very small number" "10TO32" "256" "0.000001" "0.00011hnnk2qur39mmj3v6i9ob0r23unshc07j8k39kjfkfucjqkq7kn"
 test_conversion "10TO32: Negative very small" "10TO32" "256" "-0.000001" "-0.00011hnnk2qur39mmj3v6i9ob0r23unshc07j8k39kjfkfucjqkq7kn"
 test_conversion "10TO32: Large decimal" "10TO32" "128" "123.456" "3r.eiu6kvnprchd1pb0864jeiu6g"

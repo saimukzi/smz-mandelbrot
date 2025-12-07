@@ -10,7 +10,7 @@ python3 box_calculator.py <min_ca> <min_cb> <max_ca> <max_cb> <resolution> <star
 ### Using Simple Numbers
 ```bash
 # Calculate -2 to 1 (real) and -1.5 to 1.5 (imaginary), 100x100 grid
-python3 box_calculator.py -2 -1.5@0 1 1.5@0 100 1000 2 mandelbrot.csv
+python3 box_calculator.py -2 -1.5 1 1.5 100 1000 2 mandelbrot.csv
 ```
 
 ### Using Predefined Examples
@@ -33,34 +33,32 @@ python3 examples.py spiral 100 my_spiral.csv
 ### MPFR Base-32 Format
 - **Zero:** `0`
 - **Integers:** `1` = 1, `2` = 2, etc.
-- **With exponent:** `1@0` = 1 × 32⁰ = 1
-- **Powers of 32:** `1@1` = 1 × 32¹ = 32
-- **Fractions:** `1@-1` = 1 × 32⁻¹ = 0.03125
-- **Negative:** `-1` = -1, `-2@0` = -2
-- **Decimals:** `8@-1` = 8 × 32⁻¹ = 0.25
+- **Decimal notation:** `1.g` = 1.5, `0.g` = 0.5
+- **Negative:** `-1` = -1, `-2` = -2
+- **Small decimals:** `0.1` = 0.03125 (1/32)
 
 ### Common Values
 | Value | Base-32 |
 |-------|---------|
 | 0 | `0` |
-| 1 | `1` or `1@0` |
+| 1 | `1` |
 | 2 | `2` |
 | -1 | `-1` |
 | -2 | `-2` |
-| 0.5 | `g@-1` (16/32) |
-| 0.25 | `8@-1` (8/32) |
-| 0.1 | `3@-2` (≈0.09375) |
+| 0.5 | `0.g` (16/32) |
+| 0.25 | `0.8` (8/32) |
+| 0.1 | `0.36` (≈0.09375) |
 
 ## Common Mandelbrot Regions
 
 ### The Classic View
 ```bash
-python3 box_calculator.py -2 -1.5@0 1 1.5@0 200 1000 2 classic.csv
+python3 box_calculator.py -2 -1.5 1 1.5 200 1000 2 classic.csv
 ```
 
 ### Zoom Near c = -0.75
 ```bash
-python3 box_calculator.py -0.76@0 -0.01@0 -0.74@0 0.01@0 100 5000 2 zoom.csv
+python3 box_calculator.py -0.76 -0.01 -0.74 0.01 100 5000 2 zoom.csv
 ```
 
 ### The Origin (Simple Test)
@@ -182,13 +180,13 @@ python3 examples.py classic 50
 python3 analyze_csv.py classic_mandelbrot.csv
 
 # 3. Find interesting point from CSV, zoom in
-python3 box_calculator.py -0.75@0 0.1@0 -0.74@0 0.11@0 100 2000 2 zoom1.csv
+python3 box_calculator.py -0.75 0.1 -0.74 0.11 100 2000 2 zoom1.csv
 
 # 4. Analyze zoom
 python3 analyze_csv.py zoom1.csv
 
 # 5. Deep zoom with high resolution
-python3 box_calculator.py -0.745@0 0.105@0 -0.744@0 0.106@0 200 5000 2 deep_zoom.csv
+python3 box_calculator.py -0.745 0.105 -0.744 0.106 200 5000 2 deep_zoom.csv
 ```
 
 ## Available Examples

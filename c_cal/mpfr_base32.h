@@ -8,7 +8,7 @@
 /**
  * Parse a base-32 string to MPFR number
  * 
- * @param str The base-32 string to parse (supports decimal, integer, and exponent notation)
+ * @param str The base-32 string to parse (supports decimal and integer notation)
  * @param result The MPFR variable to store the result
  * @param prec The precision in bits for the MPFR variable
  * @return 0 on success, non-zero on error

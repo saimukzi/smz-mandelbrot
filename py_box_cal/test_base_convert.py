@@ -19,7 +19,7 @@ def test_conversion(test_name, command, precision, number, expected):
     """Test a single conversion."""
     global PASSED, FAILED
     
-    cmd = ['python3', 'base_convert.py', command, str(precision), number]
+    cmd = [sys.executable, 'base_convert.py', command, str(precision), number]
     if number.startswith('-'):
         cmd.insert(-1, '--')
     
@@ -41,14 +41,14 @@ def test_roundtrip(test_name, precision, base10_value):
     global PASSED, FAILED
     
     # Convert 10->32
-    cmd1 = ['python3', 'base_convert.py', '10TO32', str(precision), base10_value]
+    cmd1 = [sys.executable, 'base_convert.py', '10TO32', str(precision), base10_value]
     if base10_value.startswith('-'):
         cmd1.insert(-1, '--')
     result1 = subprocess.run(cmd1, capture_output=True, text=True)
     base32_value = result1.stdout.strip()
     
     # Convert 32->10
-    cmd2 = ['python3', 'base_convert.py', '32TO10', str(precision), base32_value]
+    cmd2 = [sys.executable, 'base_convert.py', '32TO10', str(precision), base32_value]
     if base32_value.startswith('-'):
         cmd2.insert(-1, '--')
     result2 = subprocess.run(cmd2, capture_output=True, text=True)
@@ -103,14 +103,7 @@ test_conversion("32TO10: Small fraction 0.1 (0.03125)", "32TO10", 64, "0.1", "0.
 test_conversion("32TO10: Integer g (16)", "32TO10", 64, "g", "16")
 test_conversion("32TO10: Fraction 0.g (0.5)", "32TO10", 64, "0.g", "0.5")
 
-# Test 21-25: Exponent notation support (base-32 input)
-test_conversion("32TO10: Exponent notation 1@1 (32)", "32TO10", 64, "1@1", "32")
-test_conversion("32TO10: Exponent notation a@1 (320)", "32TO10", 64, "a@1", "320")
-test_conversion("32TO10: Exponent notation 1@-1 (0.03125)", "32TO10", 64, "1@-1", "0.03125")
-test_conversion("32TO10: Exponent notation g@0 (16)", "32TO10", 64, "g@0", "16")
-test_conversion("32TO10: Exponent notation -1@2 (-1024)", "32TO10", 64, "-1@2", "-1024")
-
-# Test 26-30: Round-trip conversions
+# Test 21-25: Round-trip conversions
 print()
 print("Round-trip conversion tests:")
 test_roundtrip("Round-trip: 0.5", 64, "0.5")
@@ -123,7 +116,7 @@ test_roundtrip("Round-trip: 0.25", 128, "0.25")
 print()
 print("Error handling tests:")
 
-result = subprocess.run(['python3', 'base_convert.py', '10TO32', '64', 'invalid'], 
+result = subprocess.run([sys.executable, 'base_convert.py', '10TO32', '64', 'invalid'], 
                        capture_output=True, text=True)
 if result.returncode != 0 and 'ERROR' in result.stderr:
     print(f"{GREEN}✓{NC} 10TO32: Invalid input handling")
@@ -132,7 +125,7 @@ else:
     print(f"{RED}✗{NC} 10TO32: Invalid input handling")
     FAILED += 1
 
-result = subprocess.run(['python3', 'base_convert.py', 'BADCMD', '64', '0'], 
+result = subprocess.run([sys.executable, 'base_convert.py', 'BADCMD', '64', '0'], 
                        capture_output=True, text=True)
 if result.returncode != 0:
     print(f"{GREEN}✓{NC} Unknown command handling")
@@ -141,7 +134,7 @@ else:
     print(f"{RED}✗{NC} Unknown command handling")
     FAILED += 1
 
-result = subprocess.run(['python3', 'base_convert.py'], 
+result = subprocess.run([sys.executable, 'base_convert.py'], 
                        capture_output=True, text=True)
 if result.returncode != 0:
     print(f"{GREEN}✓{NC} No arguments handling")

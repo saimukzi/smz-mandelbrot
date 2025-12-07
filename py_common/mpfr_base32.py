@@ -37,7 +37,6 @@ def parse_mpfr_base32(s: str, precision: int = 256) -> mpfr:
     Supports formats:
     - Plain: "1a" or "-1a"  
     - With decimal point: "1.a" or "-1.a" or "0.00001a"
-    - With exponent: "1a@2" (mantissa × 32^exponent)
     
     Args:
         s: Base-32 string to parse
@@ -55,7 +54,7 @@ def parse_mpfr_base32(s: str, precision: int = 256) -> mpfr:
             return result
         except:
             # Fallback: handle special cases or errors
-            if s == '0' or s == '0@0':
+            if s == '0':
                 return mpfr(0)
             raise ValueError(f"Cannot parse base-32 string: {s}")
 

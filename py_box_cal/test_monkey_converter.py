@@ -48,7 +48,7 @@ def run_c_converter(command, precision, number):
 def run_py_converter(command, precision, number):
     """Run the Python base converter."""
     py_converter = get_py_converter_path()
-    cmd = ['python3', py_converter, command, str(precision)]
+    cmd = [sys.executable, py_converter, command, str(precision)]
     
     # Handle negative numbers (need -- separator for argparse)
     number_str = str(number)

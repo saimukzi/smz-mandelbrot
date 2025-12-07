@@ -142,7 +142,7 @@ EXIT
 EOF
 ```
 
-**Note:** You can also use integer notation (e.g., `1a` for 26) or exponent notation (e.g., `-g@-1` for -0.5) for input. Output will always use decimal notation.
+**Note:** You can also use integer notation (e.g., `1a` for 26) for input. Output will always use decimal notation.
 
 ### Interactive Usage
 
@@ -171,7 +171,6 @@ Numbers are represented in base-32 format with decimal point notation:
 The program accepts multiple base-32 input formats:
 - **Decimal notation**: `1a.b` (with decimal point) - e.g., `b` = 11, `-0.g` = -0.5
 - **Integer notation**: `1a` (without decimal point) - e.g., `b` = 11
-- **Exponent notation**: `1a@2` (mantissa × 32^exponent) - e.g., `-g@-1` = -0.5
 - **Zero**: `0`
 
 ### Output Format

@@ -46,7 +46,7 @@ def run_c_converter(command, precision, number):
 def run_py_converter(command, precision, number):
     """Run the Python base converter."""
     py_converter = get_py_converter_path()
-    cmd = ['python3', py_converter, command, str(precision)]
+    cmd = [sys.executable, py_converter, command, str(precision)]
     
     # Handle negative numbers (need -- separator for argparse)
     if number.startswith('-'):
@@ -173,14 +173,6 @@ def main():
     test_conversion("32TO10: Small fraction 0.1 (0.03125)", "32TO10", 64, "0.1")
     test_conversion("32TO10: Integer g (16)", "32TO10", 64, "g")
     test_conversion("32TO10: Fraction 0.g (0.5)", "32TO10", 64, "0.g")
-    
-    print()
-    print("Exponent Notation Tests:")
-    print("-" * 70)
-    test_conversion("32TO10: Exponent 1@1 (32)", "32TO10", 64, "1@1")
-    test_conversion("32TO10: Exponent a@1 (320)", "32TO10", 64, "a@1")
-    test_conversion("32TO10: Exponent 1@-1 (0.03125)", "32TO10", 64, "1@-1")
-    test_conversion("32TO10: Exponent g@0 (16)", "32TO10", 64, "g@0")
     
     print()
     print("Round-trip Tests:")

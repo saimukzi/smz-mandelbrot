@@ -61,7 +61,7 @@ def convert_32_to_10(base32_str: str, precision_bits: int = 256) -> str:
     Convert base-32 (MPFR format) string to base-10.
     
     Args:
-        base32_str: Number in base-32 format (e.g., "-0.g", "a", "1@2")
+        base32_str: Number in base-32 format (e.g., "-0.g", "a")
         precision_bits: Precision in bits (like C's mpfr_prec_t)
     
     Returns:
@@ -148,7 +148,7 @@ Examples:
   %(prog)s 10TO32 128 123.456
   %(prog)s 32TO10 128 3r.efdf8
   %(prog)s 10TO32 256 1e-10
-  %(prog)s 32TO10 256 1@-2
+  %(prog)s 32TO10 256 0.00001
         """
     )
     
