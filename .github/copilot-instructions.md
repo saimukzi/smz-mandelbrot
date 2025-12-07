@@ -2,10 +2,11 @@
 
 ## Architecture Overview
 
-This is a high-precision Mandelbrot set calculator split into two tightly-coupled components:
+This is a high-precision Mandelbrot set calculator split into multiple components:
 - **c_cal/**: C executables using MPFR for arbitrary-precision math (performance-critical)
 - **py_box_cal/**: Python orchestration layer for parallel grid calculations
 - **py_common/**: Shared MPFR base-32 conversion utilities
+- **py_img/**: Image generation tools to visualize CSV calculation results
 
 The Python layer spawns multiple C processes and communicates via stdin/stdout for maximum parallelism.
 
@@ -18,15 +19,24 @@ cd c_cal && make
 Requires: `libmpfr-dev`, `libgmp-dev`
 
 ### Python Environment
+**CRITICAL: Always use the `.venv` virtual environment, never system Python.**
+
 ```bash
-# Create and activate virtual environment (recommended)
+# Create and activate virtual environment (REQUIRED)
 python3 -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt  # Installs gmpy2>=2.2.0
 ```
-Use `python3` (not `python`) - the system only has python3 available. The project uses `.venv/` as the default virtual environment.
+
+**When running Python commands:**
+- Always activate `.venv` first: `source .venv/bin/activate`
+- Or use direct path: `.venv/bin/python` or `.venv/bin/pip`
+- NEVER use system `python3` or `pip3` directly
+- Verify active environment: `which python` should show `.venv/bin/python`
+
+The project uses `.venv/` as the **mandatory** virtual environment to ensure correct dependency versions (especially gmpy2).
 
 ## MPFR Base-32 Number Format
 
@@ -72,9 +82,12 @@ echo "CAL 64 0 0 0 0 100 2" | ./mandelbrot
 
 ### Run Grid Calculation
 ```bash
+# Activate virtual environment first
+source .venv/bin/activate
+
 cd py_box_cal
-python3 examples.py classic                    # Predefined example
-python3 box_calculator.py -2 -1.5 1 1.5 100 1000 2 output.csv
+python examples.py classic                    # Predefined example
+python box_calculator.py -2 -1.5 1 1.5 100 1000 2 output.csv
 ```
 
 ### Test Workflows
@@ -82,15 +95,17 @@ python3 box_calculator.py -2 -1.5 1 1.5 100 1000 2 output.csv
 # C component tests
 cd c_cal && ./test.sh          # Comprehensive C unit tests
 
-# Python component tests  
-cd py_box_cal && python3 test.py                    # Simple integration test
-cd py_box_cal && python3 test_base_convert.py       # Base-32 conversion tests
+# Python component tests (activate .venv first!)
+source .venv/bin/activate
+cd py_box_cal && python test.py                    # Simple integration test
+cd py_box_cal && python test_base_convert.py       # Base-32 conversion tests
 ```
 
 ### Development Cycle
-1. Modify C code → rebuild with `cd c_cal && make`
-2. Test C changes: `cd c_cal && ./test.sh`
-3. Test Python integration: `cd py_box_cal && python3 test.py`
+1. Activate virtual environment: `source .venv/bin/activate`
+2. Modify C code → rebuild with `cd c_cal && make`
+3. Test C changes: `cd c_cal && ./test.sh`
+4. Test Python integration: `cd py_box_cal && python test.py`
 
 ## Project-Specific Patterns
 
@@ -128,9 +143,9 @@ CA/CB preserve input format, FINAL_ZA/ZB use decimal notation.
 
 ## Common Pitfalls
 
-1. **Missing C build**: Python scripts fail if `c_cal/mandelbrot` doesn't exist
-2. **Base-32 format errors**: Mixing decimal and base-32 breaks calculations
-3. **Python vs python3**: System requires `python3` explicitly
+1. **Using system Python**: ALWAYS activate `.venv` first - system Python lacks gmpy2
+2. **Missing C build**: Python scripts fail if `c_cal/mandelbrot` doesn't exist
+3. **Base-32 format errors**: Mixing decimal and base-32 breaks calculations
 4. **Precision too low**: Grid calculations may need >64 bits for deep zooms
 5. **Process cleanup**: Always call `pool.close()` to avoid zombie processes
 
