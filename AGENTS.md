@@ -1,6 +1,6 @@
 # SMZ Mandelbrot Development Guide
 
-> **Note**: This file should be kept in sync with `AGENTS.md`
+> **Note**: This file should be kept in sync with `.github/copilot-instructions.md`
 
 ## Architecture Overview
 
