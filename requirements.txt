@@ -3,3 +3,7 @@
 # gmpy2: Python bindings for GMP, MPFR, and MPC libraries
 # Used for arbitrary precision arithmetic compatible with C's MPFR library
 gmpy2>=2.2.0
+
+# Pillow: Python Imaging Library
+# Used for generating PNG images from calculation results
+Pillow>=10.0.0
