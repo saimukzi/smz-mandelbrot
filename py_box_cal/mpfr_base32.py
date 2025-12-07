@@ -125,15 +125,10 @@ def decimal_to_mpfr_base32(d: Decimal, precision: int = 50) -> str:
         
         value -= digit * scale
         
-        # Stop if value becomes zero
-        if value == 0:
-            break
+        # Continue generating all digits (don't stop early)
+        # This keeps trailing zeros like C does
     
-    # Remove trailing zeros
-    while len(digits) > 1 and digits[-1] == '0':
-        digits.pop()
-    
-    # Build result with decimal point
+    # Build result with decimal point (keep all generated digits including trailing zeros)
     digits_str = ''.join(digits)
     
     if exp > 0:

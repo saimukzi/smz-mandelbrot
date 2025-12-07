@@ -69,17 +69,17 @@ def test_roundtrip(test_name, precision, base10_value):
 print("Testing base_convert.py...")
 print()
 
-# Test 1-10: Base-10 to Base-32 conversions
+# Test 1-10: Base-10 to Base-32 conversions (with trailing zeros like C)
 test_conversion("10TO32: Zero", "10TO32", 64, "0", "0")
-test_conversion("10TO32: Integer 10", "10TO32", 64, "10", "a")
-test_conversion("10TO32: Negative integer -10", "10TO32", 64, "-10", "-a")
-test_conversion("10TO32: Fraction -0.5", "10TO32", 64, "-0.5", "-0.g")
-test_conversion("10TO32: Fraction 0.25", "10TO32", 128, "0.25", "0.8")
-test_conversion("10TO32: Fraction -0.75", "10TO32", 64, "-0.75", "-0.o")
-test_conversion("10TO32: Large integer 1024", "10TO32", 64, "1024", "100")
-test_conversion("10TO32: Small fraction 0.03125", "10TO32", 64, "0.03125", "0.1")
-test_conversion("10TO32: Integer 16", "10TO32", 64, "16", "g")
-test_conversion("10TO32: Integer 1", "10TO32", 64, "1", "1")
+test_conversion("10TO32: Integer 10", "10TO32", 64, "10", "a.0000000000000")
+test_conversion("10TO32: Negative integer -10", "10TO32", 64, "-10", "-a.0000000000000")
+test_conversion("10TO32: Fraction -0.5", "10TO32", 64, "-0.5", "-0.g0000000000000")
+test_conversion("10TO32: Fraction 0.25", "10TO32", 128, "0.25", "0.800000000000000000000000000")
+test_conversion("10TO32: Fraction -0.75", "10TO32", 64, "-0.75", "-0.o0000000000000")
+test_conversion("10TO32: Large integer 1024", "10TO32", 64, "1024", "100.00000000000")
+test_conversion("10TO32: Small fraction 0.03125", "10TO32", 64, "0.03125", "0.10000000000000")
+test_conversion("10TO32: Integer 16", "10TO32", 64, "16", "g.0000000000000")
+test_conversion("10TO32: Integer 1", "10TO32", 64, "1", "1.0000000000000")
 
 # Test 11-20: Base-32 to Base-10 conversions
 test_conversion("32TO10: Zero", "32TO10", 64, "0", "0")

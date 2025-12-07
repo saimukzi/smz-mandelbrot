@@ -12,23 +12,30 @@ from decimal import Decimal
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
 
 
-def convert_10_to_32(base10_str: str, precision: int = 50) -> str:
+def convert_10_to_32(base10_str: str, precision_bits: int = 50) -> str:
     """
     Convert base-10 string to base-32 (MPFR format).
     
     Args:
         base10_str: Number in base-10 format (e.g., "-0.5", "123.456", "1e-10")
-        precision: Number of base-32 digits to generate (default: 50)
+        precision_bits: Precision in bits (like C's mpfr_prec_t)
     
     Returns:
         Number in base-32 MPFR format
     """
+    import math
+    
     try:
         # Parse base-10 string to Decimal
         value = Decimal(base10_str)
         
+        # Convert bits to base-32 digits using the formula:
+        # digits = ceil(bits * log(2) / log(32)) = ceil(bits / 5)
+        # Add 1 to match MPFR's behavior
+        precision_digits = math.ceil(precision_bits * math.log(2) / math.log(32)) + 1
+        
         # Convert to base-32
-        result = decimal_to_mpfr_base32(value, precision)
+        result = decimal_to_mpfr_base32(value, precision_digits)
         
         return result
     except Exception as e:
@@ -101,10 +108,8 @@ Examples:
     
     try:
         if args.command == '10TO32':
-            # For 10TO32, precision is in bits (convert to base-32 digits)
-            # Approximate: bits / 5 (since 32 = 2^5)
-            base32_digits = max(10, args.precision // 5)
-            result = convert_10_to_32(args.number, base32_digits)
+            # For 10TO32, precision is in bits (like C's mpfr_prec_t)
+            result = convert_10_to_32(args.number, args.precision)
             print(result)
         elif args.command == '32TO10':
             result = convert_32_to_10(args.number, args.precision)
