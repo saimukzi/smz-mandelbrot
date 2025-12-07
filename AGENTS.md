@@ -16,17 +16,25 @@ sudo apt-get update && sudo apt-get install -y libmpfr-dev libgmp-dev
 
 ### Python Dependencies
 
-The Python code requires the `gmpy2` library. You can install it using pip:
+The Python code requires a virtual environment. Please create and activate it before installing dependencies.
 
-```bash
-pip install gmpy2
-```
+1.  **Create the virtual environment:**
+    ```bash
+    python3 -m venv .venv
+    ```
 
-You can also install all the python dependencies using the `requirements.txt` file.
+2.  **Activate the virtual environment:**
+    ```bash
+    source .venv/bin/activate
+    ```
 
-```bash
-pip install -r requirements.txt
-```
+3.  **Install dependencies:**
+    Once the virtual environment is activated, install the required libraries using pip:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+**Important:** Always ensure the virtual environment is activated before running any Python scripts or installing Python packages.
 
 ## Building the C Code
 
@@ -51,7 +59,7 @@ To run the full C test suite, navigate to the `c_cal` directory and run the foll
 
 ### Python Tests
 
-To run the Python tests, navigate to the `py_box_cal` directory and run the following command:
+To run the Python tests, make sure your virtual environment is activated, then navigate to the `py_box_cal` directory and run the following command:
 
 ```bash
 python3 test.py
