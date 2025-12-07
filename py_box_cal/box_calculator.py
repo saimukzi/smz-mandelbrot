@@ -300,6 +300,9 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
         pool.wait()
         batch_results = pool.get_results(len(unescape_indices))
         
+        # Track number of newly escaped points
+        newly_escaped = 0
+        
         # Update results
         for res in batch_results:
             idx = res['idx']
@@ -308,9 +311,20 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
             results[idx]['final_zb'] = res['final_zb']
             results[idx]['iterations'] += res['iterations']
             
+            # Count newly escaped points
+            if res['escaped'] == 'Y':
+                newly_escaped += 1
+            
             # Update z0 for next iteration
             results[idx]['za'] = res['final_za']
             results[idx]['zb'] = res['final_zb']
+        
+        # Check if no points escaped in this round
+        if newly_escaped == 0:
+            print(f"No new escaped points after {len(unescape_indices)} iterations, stopping", file=sys.stderr)
+            break
+        
+        print(f"Points escaped in this round: {newly_escaped}/{len(unescape_indices)}", file=sys.stderr)
         
         # Double max_iterations for next round
         max_iterations *= 2
