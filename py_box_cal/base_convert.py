@@ -3,16 +3,16 @@
 Base-10 and Base-32 Converter
 
 Command-line tool for converting between base-10 and base-32 (MPFR format).
-Uses the mpfr_base32 module for conversion operations.
+Uses the mpfr_base32 module with gmpy2 for MPFR-compatible operations.
 """
 
 import sys
 import argparse
-from decimal import Decimal
+import gmpy2
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
 
 
-def convert_10_to_32(base10_str: str, precision_bits: int = 50) -> str:
+def convert_10_to_32(base10_str: str, precision_bits: int = 256) -> str:
     """
     Convert base-10 string to base-32 (MPFR format).
     
@@ -23,26 +23,15 @@ def convert_10_to_32(base10_str: str, precision_bits: int = 50) -> str:
     Returns:
         Number in base-32 MPFR format
     """
-    import math
-    
     try:
-        # Parse base-10 string to Decimal
-        value = Decimal(base10_str)
-        
-        # Convert bits to base-32 digits using the formula:
-        # digits = ceil(bits * log(2) / log(32)) = ceil(bits / 5)
-        # Add 1 to match MPFR's behavior
-        precision_digits = math.ceil(precision_bits * math.log(2) / math.log(32)) + 1
-        
-        # Convert to base-32
-        result = decimal_to_mpfr_base32(value, precision_digits)
-        
+        # Convert to base-32 using gmpy2
+        result = decimal_to_mpfr_base32(base10_str, precision_bits)
         return result
     except Exception as e:
         raise ValueError(f"Invalid base-10 number: {e}")
 
 
-def convert_32_to_10(base32_str: str, precision_bits: int = 50) -> str:
+def convert_32_to_10(base32_str: str, precision_bits: int = 256) -> str:
     """
     Convert base-32 (MPFR format) string to base-10.
     
@@ -54,11 +43,10 @@ def convert_32_to_10(base32_str: str, precision_bits: int = 50) -> str:
         Number in base-10 format with trailing zeros
     """
     import math
-    from decimal import Decimal, getcontext
     
     try:
-        # Parse base-32 string to Decimal
-        value = parse_mpfr_base32(base32_str)
+        # Parse base-32 string to mpfr with specified precision
+        value = parse_mpfr_base32(base32_str, precision_bits)
         
         # Handle zero
         if value == 0:
@@ -69,35 +57,49 @@ def convert_32_to_10(base32_str: str, precision_bits: int = 50) -> str:
         # This matches MPFR's digit generation behavior
         total_digits = math.ceil(precision_bits * math.log(2) / math.log(10)) + 1
         
-        # Determine how many digits are before the decimal point
-        abs_value = abs(value)
-        if abs_value >= 1:
-            # Count integer digits
-            integer_digits = len(str(int(abs_value)))
-            # For numbers >= 1, fractional part gets: total_digits - integer_digits
-            fractional_digits = max(0, total_digits - integer_digits)
-        else:
-            # For values < 1, all significant digits go after the decimal point
-            # Need to account for leading zeros after decimal point
-            # Find the position of the first non-zero digit
-            import re
-            temp_str = f"{abs_value:.50f}"  # Get enough precision to see the pattern
-            match = re.search(r'\.0*', temp_str)
-            if match:
-                leading_zeros = len(match.group()) - 1  # Subtract 1 for the decimal point
+        # Use gmpy2's digits() function to get base-10 representation
+        # This directly calls MPFR's mpfr_get_str, matching C behavior exactly
+        # digits() returns (mantissa_str, exponent, precision_used)
+        mantissa_str, exp, _ = value.digits(10, 0)  # 0 means use all available precision
+        
+        # Handle special cases
+        if mantissa_str in ['@NaN@', '@Inf@', '-@Inf@']:
+            return mantissa_str
+        
+        # mantissa_str is the mantissa without decimal point
+        # exp is the exponent (number of digits before decimal point)
+        sign = '-' if mantissa_str.startswith('-') else ''
+        if sign:
+            mantissa_str = mantissa_str[1:]  # Remove sign from mantissa
+        
+        mantissa_len = len(mantissa_str)
+        
+        # Calculate how many digits we need to match C's output
+        # Pad or truncate to match the expected precision
+        if mantissa_len < total_digits:
+            mantissa_str = mantissa_str + '0' * (total_digits - mantissa_len)
+        elif mantissa_len > total_digits:
+            mantissa_str = mantissa_str[:total_digits]
+        
+        # Format the number with decimal point
+        if exp > 0:
+            # Positive exponent: digits before decimal point
+            if exp >= len(mantissa_str):
+                # Integer with trailing zeros
+                result = mantissa_str + '0' * (exp - len(mantissa_str))
             else:
-                leading_zeros = 0
-            
-            # MPFR counts significant digits in the mantissa
-            # For numbers with leading zeros, we need more fractional digits to display
-            fractional_digits = total_digits + leading_zeros
+                # Insert decimal point
+                integer_part = mantissa_str[:exp]
+                fractional_part = mantissa_str[exp:]
+                result = integer_part + '.' + fractional_part
+        elif exp == 0:
+            # All digits after decimal point
+            result = '0.' + mantissa_str
+        else:
+            # Negative exponent: leading zeros after decimal point
+            result = '0.' + '0' * (-exp) + mantissa_str
         
-        # Format with the calculated precision
-        result = f"{value:.{fractional_digits}f}"
-        
-        # Do NOT remove trailing zeros - keep them like C does
-        
-        return result
+        return sign + result
     except Exception as e:
         raise ValueError(f"Invalid base-32 number: {e}")
 

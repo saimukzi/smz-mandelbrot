@@ -26,16 +26,19 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     Calculate required MPFR precision in bits based on grid resolution.
     Precision is rounded up to nearest multiple of 64.
     """
-    # Parse bounds
-    min_ca_dec = parse_mpfr_base32(min_ca)
-    max_ca_dec = parse_mpfr_base32(max_ca)
-    min_cb_dec = parse_mpfr_base32(min_cb)
-    max_cb_dec = parse_mpfr_base32(max_cb)
+    import gmpy2
+    
+    # Parse bounds as mpfr objects
+    min_ca_dec = parse_mpfr_base32(min_ca, 256)
+    max_ca_dec = parse_mpfr_base32(max_ca, 256)
+    min_cb_dec = parse_mpfr_base32(min_cb, 256)
+    max_cb_dec = parse_mpfr_base32(max_cb, 256)
     
     # Calculate step sizes
     if resolution > 1:
-        delta_ca = (max_ca_dec - min_ca_dec) / (resolution - 1)
-        delta_cb = (max_cb_dec - min_cb_dec) / (resolution - 1)
+        res_minus_1 = gmpy2.mpfr(resolution - 1)
+        delta_ca = (max_ca_dec - min_ca_dec) / res_minus_1
+        delta_cb = (max_cb_dec - min_cb_dec) / res_minus_1
     else:
         # Single point, use reasonable precision
         return 64
@@ -61,25 +64,33 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     Generate a grid of c = ca + i*cb points.
     Returns list of (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
     """
-    # Parse bounds
-    min_ca_dec = parse_mpfr_base32(min_ca)
-    max_ca_dec = parse_mpfr_base32(max_ca)
-    min_cb_dec = parse_mpfr_base32(min_cb)
-    max_cb_dec = parse_mpfr_base32(max_cb)
+    import gmpy2
+    
+    # Parse bounds as mpfr objects with sufficient precision
+    # Use 256 bits as default for grid generation
+    min_ca_dec = parse_mpfr_base32(min_ca, 256)
+    max_ca_dec = parse_mpfr_base32(max_ca, 256)
+    min_cb_dec = parse_mpfr_base32(min_cb, 256)
+    max_cb_dec = parse_mpfr_base32(max_cb, 256)
     
     grid = []
     
     for i in range(resolution):
         for j in range(resolution):
             if resolution > 1:
-                ca = min_ca_dec + (max_ca_dec - min_ca_dec) * Decimal(i) / Decimal(resolution - 1)
-                cb = min_cb_dec + (max_cb_dec - min_cb_dec) * Decimal(j) / Decimal(resolution - 1)
+                # Use gmpy2.mpfr for all arithmetic
+                i_mpfr = gmpy2.mpfr(i)
+                j_mpfr = gmpy2.mpfr(j)
+                res_minus_1 = gmpy2.mpfr(resolution - 1)
+                
+                ca = min_ca_dec + (max_ca_dec - min_ca_dec) * i_mpfr / res_minus_1
+                cb = min_cb_dec + (max_cb_dec - min_cb_dec) * j_mpfr / res_minus_1
             else:
                 ca = min_ca_dec
                 cb = min_cb_dec
             
-            ca_str = decimal_to_mpfr_base32(ca)
-            cb_str = decimal_to_mpfr_base32(cb)
+            ca_str = decimal_to_mpfr_base32(ca, 256)
+            cb_str = decimal_to_mpfr_base32(cb, 256)
             grid.append((ca_str, cb_str, i, j))
     
     return grid
