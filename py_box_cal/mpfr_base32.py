@@ -70,40 +70,87 @@ def parse_mpfr_base32(s: str) -> Decimal:
     return result
 
 
-def decimal_to_mpfr_base32(d: Decimal) -> str:
+def decimal_to_mpfr_base32(d: Decimal, precision: int = 50) -> str:
     """
-    Convert a Python Decimal to MPFR base-32 string format.
-    This is a simplified conversion for generating grid points.
+    Convert a Python Decimal to MPFR base-32 string format in decimal notation.
+    Outputs format similar to C implementation: "0.g", "a", "100", etc.
+    
+    Args:
+        d: Decimal value to convert
+        precision: Number of base-32 digits to generate (default: 50)
+    
+    Returns:
+        Base-32 string in decimal notation
     """
+    getcontext().prec = 100
+    
     if d == 0:
         return "0"
     
     # Determine sign
-    if d < 0:
-        sign = "-"
-        d = abs(d)
-    else:
-        sign = ""
+    sign = "-" if d < 0 else ""
+    d = abs(d)
     
-    # Find appropriate exponent (power of 32)
+    # Find the exponent (position of most significant digit)
+    # exp is the number of digits before the radix point
     if d >= 1:
-        exponent = int(math.log(float(d), 32))
+        exp = 0
+        temp = d
+        while temp >= 1:
+            temp /= Decimal(32)
+            exp += 1
     else:
-        exponent = int(math.floor(math.log(float(d), 32)))
+        exp = 0
+        temp = d
+        while temp < Decimal(1):
+            temp *= Decimal(32)
+            exp -= 1
+        exp += 1  # Adjust because we went one too far
     
-    # Calculate mantissa
-    mantissa = d / (Decimal(32) ** exponent)
+    # Generate base-32 digits
+    digits = []
+    value = d
     
-    # Convert mantissa to base-32 string (14 digits precision)
-    mantissa_str = ""
-    for _ in range(14):
-        digit = int(mantissa)
+    # Start from the most significant digit position
+    for i in range(precision):
+        digit_pos = exp - 1 - i
+        scale = Decimal(32) ** digit_pos
+        digit = int(value / scale)
+        digit = digit % 32
+        
         if digit < 10:
-            mantissa_str += str(digit)
+            digits.append(str(digit))
         else:
-            mantissa_str += chr(ord('a') + digit - 10)
-        mantissa = (mantissa - digit) * 32
-        if mantissa == 0:
+            digits.append(chr(ord('a') + digit - 10))
+        
+        value -= digit * scale
+        
+        # Stop if value becomes zero
+        if value == 0:
             break
     
-    return f"{sign}{mantissa_str}@{exponent}"
+    # Remove trailing zeros
+    while len(digits) > 1 and digits[-1] == '0':
+        digits.pop()
+    
+    # Build result with decimal point
+    digits_str = ''.join(digits)
+    
+    if exp > 0:
+        # Positive exponent: digits before decimal point
+        if exp >= len(digits_str):
+            # Need trailing zeros
+            result = digits_str + '0' * (exp - len(digits_str))
+        else:
+            # Insert decimal point
+            integer_part = digits_str[:exp]
+            fractional_part = digits_str[exp:]
+            if fractional_part and fractional_part != '0':
+                result = integer_part + '.' + fractional_part
+            else:
+                result = integer_part
+    else:
+        # Negative or zero exponent: leading zeros after decimal point
+        result = '0.' + '0' * (-exp) + digits_str
+    
+    return sign + result

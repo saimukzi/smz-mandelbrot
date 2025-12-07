@@ -12,12 +12,13 @@ from decimal import Decimal
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
 
 
-def convert_10_to_32(base10_str: str) -> str:
+def convert_10_to_32(base10_str: str, precision: int = 50) -> str:
     """
     Convert base-10 string to base-32 (MPFR format).
     
     Args:
         base10_str: Number in base-10 format (e.g., "-0.5", "123.456", "1e-10")
+        precision: Number of base-32 digits to generate (default: 50)
     
     Returns:
         Number in base-32 MPFR format
@@ -27,7 +28,7 @@ def convert_10_to_32(base10_str: str) -> str:
         value = Decimal(base10_str)
         
         # Convert to base-32
-        result = decimal_to_mpfr_base32(value)
+        result = decimal_to_mpfr_base32(value, precision)
         
         return result
     except Exception as e:
@@ -76,32 +77,34 @@ Commands:
   32TO10  Convert base-32 to base-10
 
 Examples:
-  %(prog)s 10TO32 -0.5
-  %(prog)s 32TO10 -0.g
-  %(prog)s 10TO32 0.25
-  %(prog)s 32TO10 0.8
-  %(prog)s 10TO32 123.456
-  %(prog)s 32TO10 3r.efdf8
-  %(prog)s 10TO32 1e-10
-  %(prog)s 32TO10 1@-2 --precision 100
+  %(prog)s 10TO32 64 -0.5
+  %(prog)s 32TO10 64 -0.g
+  %(prog)s 10TO32 128 0.25
+  %(prog)s 32TO10 128 0.8
+  %(prog)s 10TO32 128 123.456
+  %(prog)s 32TO10 128 3r.efdf8
+  %(prog)s 10TO32 256 1e-10
+  %(prog)s 32TO10 256 1@-2
         """
     )
     
     parser.add_argument('command', 
                         choices=['10TO32', '32TO10'],
                         help='Conversion command')
+    parser.add_argument('precision',
+                        type=int,
+                        help='Precision in bits for 10TO32, or decimal places for 32TO10')
     parser.add_argument('number',
                         help='Number to convert')
-    parser.add_argument('-p', '--precision',
-                        type=int,
-                        default=50,
-                        help='Output precision for 32TO10 (decimal places, default: 50)')
     
     args = parser.parse_args()
     
     try:
         if args.command == '10TO32':
-            result = convert_10_to_32(args.number)
+            # For 10TO32, precision is in bits (convert to base-32 digits)
+            # Approximate: bits / 5 (since 32 = 2^5)
+            base32_digits = max(10, args.precision // 5)
+            result = convert_10_to_32(args.number, base32_digits)
             print(result)
         elif args.command == '32TO10':
             result = convert_32_to_10(args.number, args.precision)
