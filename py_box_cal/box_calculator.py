@@ -13,7 +13,7 @@ import math
 import argparse
 from decimal import Decimal, getcontext
 from multiprocessing import Pool, cpu_count
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 import threading
 import queue
 
@@ -37,7 +37,7 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     
     # Calculate step sizes
     if resolution > 1:
-        res_minus_1 = gmpy2.mpfr(resolution - 1)
+        res_minus_1 = gmpy2.mpfr(resolution - 1)  # type: ignore
         delta_ca = (max_ca_dec - min_ca_dec) / res_minus_1
         delta_cb = (max_cb_dec - min_cb_dec) / res_minus_1
     else:
@@ -79,9 +79,9 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
         for j in range(resolution):
             if resolution > 1:
                 # Use gmpy2.mpfr for all arithmetic
-                i_mpfr = gmpy2.mpfr(i)
-                j_mpfr = gmpy2.mpfr(j)
-                res_minus_1 = gmpy2.mpfr(resolution - 1)
+                i_mpfr = gmpy2.mpfr(i)  # type: ignore
+                j_mpfr = gmpy2.mpfr(j)  # type: ignore
+                res_minus_1 = gmpy2.mpfr(resolution - 1)  # type: ignore
                 
                 ca = min_ca_dec + (max_ca_dec - min_ca_dec) * i_mpfr / res_minus_1
                 cb = min_cb_dec + (max_cb_dec - min_cb_dec) * j_mpfr / res_minus_1
@@ -103,7 +103,7 @@ class MandelbrotWorker:
     
     def __init__(self, mandelbrot_path: str):
         self.mandelbrot_path = mandelbrot_path
-        self.process = None
+        self.process: Optional[subprocess.Popen[str]] = None
         self.lock = threading.Lock()
         self._start_process()
     
@@ -127,10 +127,12 @@ class MandelbrotWorker:
         with self.lock:
             # Send CAL command
             cmd = f"CAL {precision} {za} {zb} {ca} {cb} {max_iterations} {escape_radius}\n"
+            assert self.process and self.process.stdin
             self.process.stdin.write(cmd)
             self.process.stdin.flush()
             
             # Read response
+            assert self.process.stdout
             response = self.process.stdout.readline().strip()
             
             # Parse response: CAL <escaped> <final_za> <final_zb> <iterations>
@@ -148,7 +150,7 @@ class MandelbrotWorker:
     def close(self):
         """Close the mandelbrot process."""
         with self.lock:
-            if self.process:
+            if self.process and self.process.stdin:
                 self.process.stdin.write("EXIT\n")
                 self.process.stdin.flush()
                 self.process.wait()
@@ -159,7 +161,7 @@ class MandelbrotPool:
     Pool of mandelbrot worker processes for parallel computation.
     """
     
-    def __init__(self, mandelbrot_path: str, num_workers: int = None):
+    def __init__(self, mandelbrot_path: str, num_workers: Optional[int] = None):
         if num_workers is None:
             num_workers = cpu_count()
         
