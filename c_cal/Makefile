@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -O2
 LIBS = -lmpfr -lgmp
 
 TARGET = mandelbrot
-SRC = mandelbrot.c
+SRC = mandelbrot.c mpfr_base32.c
 
 all: $(TARGET)
 
