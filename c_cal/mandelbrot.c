@@ -88,8 +88,8 @@ void process_cal_command(const char *line, int verbose) {
     }
     
     // Initialize MPFR variables
-    mpfr_t za, zb, ca, cb, escape_radius;
-    mpfr_t z_real, z_imag, z_magnitude;
+    mpfr_t za, zb, ca, cb, escape_radius, escape_radius_sq;
+    mpfr_t z_real, z_imag, z_real_sq, z_imag_sq, z_magnitude_sq;
     mpfr_t temp_real, temp_imag;
     
     mpfr_init2(za, precision);
@@ -97,9 +97,12 @@ void process_cal_command(const char *line, int verbose) {
     mpfr_init2(ca, precision);
     mpfr_init2(cb, precision);
     mpfr_init2(escape_radius, precision);
+    mpfr_init2(escape_radius_sq, precision);
     mpfr_init2(z_real, precision);
     mpfr_init2(z_imag, precision);
-    mpfr_init2(z_magnitude, precision);
+    mpfr_init2(z_real_sq, precision);
+    mpfr_init2(z_imag_sq, precision);
+    mpfr_init2(z_magnitude_sq, precision);
     mpfr_init2(temp_real, precision);
     mpfr_init2(temp_imag, precision);
     
@@ -126,14 +129,20 @@ void process_cal_command(const char *line, int verbose) {
         mpfr_clear(ca);
         mpfr_clear(cb);
         mpfr_clear(escape_radius);
+        mpfr_clear(escape_radius_sq);
         mpfr_clear(z_real);
         mpfr_clear(z_imag);
-        mpfr_clear(z_magnitude);
+        mpfr_clear(z_real_sq);
+        mpfr_clear(z_imag_sq);
+        mpfr_clear(z_magnitude_sq);
         mpfr_clear(temp_real);
         mpfr_clear(temp_imag);
         return;
     }
     
+    // Pre-calculate escape_radius^2
+    mpfr_sqr(escape_radius_sq, escape_radius, MPFR_RNDN);
+
     // Initialize z with z0
     mpfr_set(z_real, za, MPFR_RNDN);
     mpfr_set(z_imag, zb, MPFR_RNDN);
@@ -162,10 +171,12 @@ void process_cal_command(const char *line, int verbose) {
             if (step_zb_str) free(step_zb_str);
         }
         
-        // Check if |z| > escape_radius (after computing new z)
-        complex_abs(z_magnitude, z_real, z_imag);
+        // Check if |z|^2 > escape_radius^2
+        mpfr_sqr(z_real_sq, z_real, MPFR_RNDN);
+        mpfr_sqr(z_imag_sq, z_imag, MPFR_RNDN);
+        mpfr_add(z_magnitude_sq, z_real_sq, z_imag_sq, MPFR_RNDN);
         
-        if (mpfr_cmp(z_magnitude, escape_radius) > 0) {
+        if (mpfr_cmp(z_magnitude_sq, escape_radius_sq) > 0) {
             escaped = 'Y';
             break;
         }
@@ -192,9 +203,12 @@ void process_cal_command(const char *line, int verbose) {
     mpfr_clear(ca);
     mpfr_clear(cb);
     mpfr_clear(escape_radius);
+    mpfr_clear(escape_radius_sq);
     mpfr_clear(z_real);
     mpfr_clear(z_imag);
-    mpfr_clear(z_magnitude);
+    mpfr_clear(z_real_sq);
+    mpfr_clear(z_imag_sq);
+    mpfr_clear(z_magnitude_sq);
     mpfr_clear(temp_real);
     mpfr_clear(temp_imag);
 }

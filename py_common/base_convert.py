@@ -29,7 +29,10 @@ def remove_trailing_zeros(s: str) -> str:
     # Remove trailing zeros
     s = s.rstrip('0')
     # Remove decimal point if it's now at the end
-    s = s.rstrip('.')
+    if s.endswith('.'):
+        # Check if the character before the decimal point is a digit
+        if len(s) > 1 and s[-2].isdigit():
+            s = s[:-1]
     return s
 
 

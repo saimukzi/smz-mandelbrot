@@ -7,6 +7,7 @@
  * Remove trailing zeros from a number string that has a decimal point
  * Also removes the decimal point if no fractional part remains
  */
+#include <ctype.h>
 static void remove_trailing_zeros(char *str) {
     // Find decimal point
     char *decimal = strchr(str, '.');
@@ -25,7 +26,10 @@ static void remove_trailing_zeros(char *str) {
     
     // Remove decimal point if it's now at the end
     if (*end == '.') {
-        *end = '\0';
+        // Check if the character before the decimal point is a digit
+        if (end > str && isdigit(*(end - 1))) {
+            *end = '\0';
+        }
     }
 }
 

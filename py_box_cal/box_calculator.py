@@ -64,7 +64,7 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
 
 
 def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
-                 resolution: int) -> Tuple[List[Tuple[str, str, int, int]], int, int]:
+                 resolution: int, precision: int) -> Tuple[List[Tuple[str, str, int, int]], int, int]:
     """
     Generate a grid of c = ca + i*cb points.
     Resolution applies to the real part (ca), and imaginary resolution (cb) is calculated
@@ -74,11 +74,10 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     """
 
     # Parse bounds as mpfr objects with sufficient precision
-    # Use 256 bits as default for grid generation
-    min_ca_dec = parse_mpfr_base32(min_ca, 256)
-    max_ca_dec = parse_mpfr_base32(max_ca, 256)
-    min_cb_dec = parse_mpfr_base32(min_cb, 256)
-    max_cb_dec = parse_mpfr_base32(max_cb, 256)
+    min_ca_dec = parse_mpfr_base32(min_ca, precision)
+    max_ca_dec = parse_mpfr_base32(max_ca, precision)
+    min_cb_dec = parse_mpfr_base32(min_cb, precision)
+    max_cb_dec = parse_mpfr_base32(max_cb, precision)
     
     # Calculate dimensions
     range_ca = abs(max_ca_dec - min_ca_dec)
@@ -113,8 +112,8 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
             else:
                 cb = min_cb_dec
             
-            ca_str = decimal_to_mpfr_base32(ca, 256)
-            cb_str = decimal_to_mpfr_base32(cb, 256)
+            ca_str = decimal_to_mpfr_base32(ca, precision)
+            cb_str = decimal_to_mpfr_base32(cb, precision)
             grid.append((ca_str, cb_str, i, j))
     
     return grid, resolution_ca, resolution_cb
@@ -270,15 +269,18 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
         print(f"Error: mandelbrot executable not found at {mandelbrot_path}", file=sys.stderr)
         sys.exit(1)
     
-    # Generate grid (this also calculates resolutions)
-    grid, resolution_ca, resolution_cb = generate_grid(min_ca, max_ca, min_cb, max_cb, resolution)
-    total_points = len(grid)
-    print(f"Grid size: {resolution_ca}x{resolution_cb} = {total_points} points", file=sys.stderr)
+    # Calculate initial resolution to determine precision
+    _, resolution_ca_init, resolution_cb_init = generate_grid(min_ca, max_ca, min_cb, max_cb, resolution, 256)
     
-    # Calculate precision
-    precision = calculate_precision(min_ca, max_ca, min_cb, max_cb, resolution_ca, resolution_cb)
+    # Calculate precision based on initial grid estimate
+    precision = calculate_precision(min_ca, max_ca, min_cb, max_cb, resolution_ca_init, resolution_cb_init)
     print(f"Using precision: {precision} bits", file=sys.stderr)
     
+    # Generate final grid with calculated precision
+    grid, resolution_ca, resolution_cb = generate_grid(min_ca, max_ca, min_cb, max_cb, resolution, precision)
+    total_points = len(grid)
+    print(f"Grid size: {resolution_ca}x{resolution_cb} = {total_points} points", file=sys.stderr)
+
     # Initialize results storage
     results = {}
     for idx, (ca, cb, x, y) in enumerate(grid):
