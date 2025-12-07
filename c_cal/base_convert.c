@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpfr.h>
+#include <ctype.h>
 #include "mpfr_base32.h"
 
 #define MAX_LINE_LENGTH 4096
@@ -29,7 +30,10 @@ void remove_trailing_zeros(char *str) {
     
     // Remove decimal point if it's now at the end
     if (*end == '.') {
-        *end = '\0';
+        // Check if the character before the decimal point is a digit
+        if (end > str && isdigit(*(end - 1))) {
+            *end = '\0';
+        }
     }
 }
 
