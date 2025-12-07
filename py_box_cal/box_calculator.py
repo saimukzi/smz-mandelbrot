@@ -38,12 +38,12 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     min_cb_dec = parse_mpfr_base32(min_cb, 256)
     max_cb_dec = parse_mpfr_base32(max_cb, 256)
     
-    # Calculate step sizes
+    # Calculate step sizes (max bounds are exclusive)
     if resolution_ca > 1 and resolution_cb > 1:
-        res_ca_minus_1 = gmpy2.mpfr(resolution_ca - 1)  # type: ignore
-        res_cb_minus_1 = gmpy2.mpfr(resolution_cb - 1)  # type: ignore
-        delta_ca = (max_ca_dec - min_ca_dec) / res_ca_minus_1
-        delta_cb = (max_cb_dec - min_cb_dec) / res_cb_minus_1
+        res_ca = gmpy2.mpfr(resolution_ca)  # type: ignore
+        res_cb = gmpy2.mpfr(resolution_cb)  # type: ignore
+        delta_ca = (max_ca_dec - min_ca_dec) / res_ca
+        delta_cb = (max_cb_dec - min_cb_dec) / res_cb
     else:
         # Single point, use reasonable precision
         return 64
@@ -90,7 +90,7 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     # Calculate imaginary resolution based on aspect ratio
     if range_ca > 0:
         aspect_ratio = float(range_cb / range_ca)
-        resolution_cb = max(1, round((resolution_ca-1) * aspect_ratio)+1)
+        resolution_cb = max(1, round(resolution_ca * aspect_ratio))
     else:
         resolution_cb = resolution
     
@@ -100,16 +100,17 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
         for j in range(resolution_cb):
             if resolution_ca > 1:
                 # Use gmpy2.mpfr for all arithmetic
+                # max_ca is exclusive, so we divide by resolution_ca (not resolution_ca - 1)
                 i_mpfr = gmpy2.mpfr(i)  # type: ignore
-                res_ca_minus_1 = gmpy2.mpfr(resolution_ca - 1)  # type: ignore
-                ca = min_ca_dec + (max_ca_dec - min_ca_dec) * i_mpfr / res_ca_minus_1
+                res_ca = gmpy2.mpfr(resolution_ca)  # type: ignore
+                ca = min_ca_dec + (max_ca_dec - min_ca_dec) * i_mpfr / res_ca
             else:
                 ca = min_ca_dec
             
             if resolution_cb > 1:
                 j_mpfr = gmpy2.mpfr(j)  # type: ignore
-                res_cb_minus_1 = gmpy2.mpfr(resolution_cb - 1)  # type: ignore
-                cb = min_cb_dec + (max_cb_dec - min_cb_dec) * j_mpfr / res_cb_minus_1
+                res_cb = gmpy2.mpfr(resolution_cb)  # type: ignore
+                cb = min_cb_dec + (max_cb_dec - min_cb_dec) * j_mpfr / res_cb
             else:
                 cb = min_cb_dec
             

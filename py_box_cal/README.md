@@ -40,10 +40,10 @@ python3 box_calculator.py <min_ca> <min_cb> <max_ca> <max_cb> <resolution> <star
 
 | Argument | Description | Format |
 |----------|-------------|--------|
-| `<min_ca>` | Minimum real part of c | Base-32 (decimal or integer notation) |
-| `<min_cb>` | Minimum imaginary part of c | Base-32 (decimal or integer notation) |
-| `<max_ca>` | Maximum real part of c | Base-32 (decimal or integer notation) |
-| `<max_cb>` | Maximum imaginary part of c | Base-32 (decimal or integer notation) |
+| `<min_ca>` | Minimum real part of c (inclusive) | Base-32 (decimal or integer notation) |
+| `<min_cb>` | Minimum imaginary part of c (inclusive) | Base-32 (decimal or integer notation) |
+| `<max_ca>` | Maximum real part of c (exclusive) | Base-32 (decimal or integer notation) |
+| `<max_cb>` | Maximum imaginary part of c (exclusive) | Base-32 (decimal or integer notation) |
 | `<resolution>` | Grid points per axis (N×N grid) | Integer |
 | `<start_max_iterations>` | Initial iteration limit | Integer |
 | `<escape_radius>` | Escape radius R | Base-32 (decimal or integer notation) |
@@ -91,8 +91,10 @@ The program generates a uniform grid with `resolution` points on both axes:
 
 $$c_{i,j} = (c_a^{min} + i \cdot \Delta c_a) + i(c_b^{min} + j \cdot \Delta c_b)$$
 
-where:
-$$\Delta c_a = \frac{c_a^{max} - c_a^{min}}{resolution - 1}, \quad \Delta c_b = \frac{c_b^{max} - c_b^{min}}{resolution - 1}$$
+where $i, j \in [0, resolution)$ and:
+$$\Delta c_a = \frac{c_a^{max} - c_a^{min}}{resolution}, \quad \Delta c_b = \frac{c_b^{max} - c_b^{min}}{resolution}$$
+
+Note: $c_a^{min}$ and $c_b^{min}$ are inclusive, while $c_a^{max}$ and $c_b^{max}$ are exclusive.
 
 ### Precision Calculation
 
