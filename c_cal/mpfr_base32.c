@@ -135,7 +135,7 @@ char* mpfr_to_base32(mpfr_t value) {
     }
     
     // Remove trailing zeros before returning
-    //remove_trailing_zeros(result);
+    remove_trailing_zeros(result);
 
     mpfr_free_str(str);
     return result;

@@ -48,46 +48,10 @@ def convert_10_to_32(base10_str: str, precision_bits: int = 256) -> str:
     Returns:
         Number in base-32 MPFR format
     """
-    import math
-    import gmpy2
     try:
-        with gmpy2.context(precision=precision_bits):
-            value = gmpy2.mpfr(base10_str)
-            if value == 0:
-                return "0"
-
-            # digits = ceil(bits * log(2) / log(32)) + 1
-            total_digits = math.ceil(precision_bits * math.log(2) / math.log(32)) + 1
-
-            mantissa_str, exp, _ = value.digits(32, 0)
-
-            if mantissa_str in ['@NaN@', '@Inf@', '-@Inf@']:
-                return mantissa_str
-
-            sign = '-' if mantissa_str.startswith('-') else ''
-            if sign:
-                mantissa_str = mantissa_str[1:]
-
-            mantissa_len = len(mantissa_str)
-            if mantissa_len < total_digits:
-                mantissa_str = mantissa_str + '0' * (total_digits - mantissa_len)
-            elif mantissa_len > total_digits:
-                mantissa_str = mantissa_str[:total_digits]
-
-            if exp > 0:
-                if exp >= len(mantissa_str):
-                    result = mantissa_str + '0' * (exp - len(mantissa_str))
-                else:
-                    integer_part = mantissa_str[:exp]
-                    fractional_part = mantissa_str[exp:]
-                    result = integer_part + '.' + fractional_part
-            elif exp == 0:
-                result = '0.' + mantissa_str
-            else:
-                result = '0.' + '0' * (-exp) + mantissa_str
-
-            return sign + result
-
+        # Convert to base-32 using gmpy2
+        result = decimal_to_mpfr_base32(base10_str, precision_bits)
+        return result
     except Exception as e:
         raise ValueError(f"Invalid base-10 number: {e}")
 
@@ -162,7 +126,7 @@ def convert_32_to_10(base32_str: str, precision_bits: int = 256) -> str:
         
         result = sign + result
         # Remove trailing zeros before returning
-        return result
+        return remove_trailing_zeros(result)
     except Exception as e:
         raise ValueError(f"Invalid base-32 number: {e}")
 
