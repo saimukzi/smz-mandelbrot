@@ -144,7 +144,16 @@ void process_cal_command(const char *line) {
         parse_base32_to_mpfr(zb_str, zb, precision) != 0 ||
         parse_base32_to_mpfr(ca_str, ca, precision) != 0 ||
         parse_base32_to_mpfr(cb_str, cb, precision) != 0 ||
-        parse_base32_to_mpfr(escape_radius_str, escape_radius, precision) != 0) {
+        parse_base32_to_mpfr(escape_radius_str, escape_radius, precision) != 0 ||
+
+        // Additional validation
+        mpfr_nan_p(za) || mpfr_inf_p(za) ||
+        mpfr_nan_p(zb) || mpfr_inf_p(zb) ||
+        mpfr_nan_p(ca) || mpfr_inf_p(ca) ||
+        mpfr_nan_p(cb) || mpfr_inf_p(cb) ||
+        mpfr_nan_p(escape_radius) || mpfr_inf_p(escape_radius) ||
+        mpfr_cmp_si(escape_radius, 0) < 0) {
+
         printf("BAD_CMD\n");
         fflush(stdout);
         
