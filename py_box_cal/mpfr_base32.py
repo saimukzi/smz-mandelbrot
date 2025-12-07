@@ -10,6 +10,27 @@ import gmpy2
 from gmpy2 import mpfr
 
 
+def remove_trailing_zeros(s: str) -> str:
+    """
+    Remove trailing zeros from a number string that has a decimal point.
+    Also removes the decimal point if no fractional part remains.
+    
+    Args:
+        s: Number string
+    
+    Returns:
+        String with trailing zeros removed
+    """
+    if '.' not in s:
+        return s
+    
+    # Remove trailing zeros
+    s = s.rstrip('0')
+    # Remove decimal point if it's now at the end
+    s = s.rstrip('.')
+    return s
+
+
 def parse_mpfr_base32(s: str, precision: int = 256) -> mpfr:
     """
     Parse an MPFR base-32 string to a gmpy2 mpfr object.
@@ -88,7 +109,9 @@ def mpfr_to_base32(value: mpfr, precision_digits: int = 0) -> str:
         # Negative exponent: leading zeros after decimal point
         result = '0.' + '0' * (-exp) + mantissa_str
     
-    return sign + result
+    result = sign + result
+    # Remove trailing zeros before returning
+    return remove_trailing_zeros(result)
 
 
 def decimal_to_mpfr_base32(d, precision_bits: int = 256) -> str:

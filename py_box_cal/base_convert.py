@@ -12,6 +12,27 @@ import gmpy2
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
 
 
+def remove_trailing_zeros(s: str) -> str:
+    """
+    Remove trailing zeros from a number string that has a decimal point.
+    Also removes the decimal point if no fractional part remains.
+    
+    Args:
+        s: Number string
+    
+    Returns:
+        String with trailing zeros removed
+    """
+    if '.' not in s:
+        return s
+    
+    # Remove trailing zeros
+    s = s.rstrip('0')
+    # Remove decimal point if it's now at the end
+    s = s.rstrip('.')
+    return s
+
+
 def convert_10_to_32(base10_str: str, precision_bits: int = 256) -> str:
     """
     Convert base-10 string to base-32 (MPFR format).
@@ -99,7 +120,9 @@ def convert_32_to_10(base32_str: str, precision_bits: int = 256) -> str:
             # Negative exponent: leading zeros after decimal point
             result = '0.' + '0' * (-exp) + mantissa_str
         
-        return sign + result
+        result = sign + result
+        # Remove trailing zeros before returning
+        return remove_trailing_zeros(result)
     except Exception as e:
         raise ValueError(f"Invalid base-32 number: {e}")
 

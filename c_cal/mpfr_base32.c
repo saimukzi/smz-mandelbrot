@@ -4,6 +4,32 @@
 #include <string.h>
 
 /**
+ * Remove trailing zeros from a number string that has a decimal point
+ * Also removes the decimal point if no fractional part remains
+ */
+static void remove_trailing_zeros(char *str) {
+    // Find decimal point
+    char *decimal = strchr(str, '.');
+    if (decimal == NULL) {
+        return;  // No decimal point, nothing to do
+    }
+    
+    // Find end of string
+    char *end = str + strlen(str) - 1;
+    
+    // Remove trailing zeros
+    while (end > decimal && *end == '0') {
+        *end = '\0';
+        end--;
+    }
+    
+    // Remove decimal point if it's now at the end
+    if (*end == '.') {
+        *end = '\0';
+    }
+}
+
+/**
  * Parse a base-32 string to MPFR number
  */
 int parse_base32_to_mpfr(const char *str, mpfr_t result, mpfr_prec_t prec) {
@@ -108,6 +134,9 @@ char* mpfr_to_base32(mpfr_t value) {
         strcpy(dest, src);
     }
     
+    // Remove trailing zeros before returning
+    remove_trailing_zeros(result);
+
     mpfr_free_str(str);
     return result;
 }

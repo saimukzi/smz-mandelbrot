@@ -8,6 +8,32 @@
 #define DEFAULT_PRECISION 256
 
 /**
+ * Remove trailing zeros from a number string that has a decimal point
+ * Also removes the decimal point if no fractional part remains
+ */
+void remove_trailing_zeros(char *str) {
+    // Find decimal point
+    char *decimal = strchr(str, '.');
+    if (decimal == NULL) {
+        return;  // No decimal point, nothing to do
+    }
+    
+    // Find end of string
+    char *end = str + strlen(str) - 1;
+    
+    // Remove trailing zeros
+    while (end > decimal && *end == '0') {
+        *end = '\0';
+        end--;
+    }
+    
+    // Remove decimal point if it's now at the end
+    if (*end == '.') {
+        *end = '\0';
+    }
+}
+
+/**
  * Convert base-10 to base-32
  */
 void convert_10_to_32(const char *base10_str, mpfr_prec_t precision) {
@@ -90,30 +116,38 @@ void convert_32_to_10(const char *base32_str, mpfr_prec_t precision) {
         printf("-");
     }
     
+    // Build output string in a buffer for trailing zero removal
+    char output[4096];
+    char *out_ptr = output;
+    
     if (exp > 0) {
         if ((size_t)exp >= mantissa_len) {
             // Integer with trailing zeros
-            printf("%s", base10_str + sign_offset);
+            out_ptr += sprintf(out_ptr, "%s", base10_str + sign_offset);
             for (long i = mantissa_len; i < exp; i++) {
-                printf("0");
+                *out_ptr++ = '0';
             }
-            printf("\n");
+            *out_ptr = '\0';
         } else {
             // Insert decimal point
             for (long i = 0; i < exp; i++) {
-                printf("%c", base10_str[sign_offset + i]);
+                *out_ptr++ = base10_str[sign_offset + i];
             }
-            printf(".");
-            printf("%s\n", base10_str + sign_offset + exp);
+            *out_ptr++ = '.';
+            strcpy(out_ptr, base10_str + sign_offset + exp);
         }
     } else {
         // Leading zeros
-        printf("0.");
+        out_ptr += sprintf(out_ptr, "0.");
         for (long i = 0; i < -exp; i++) {
-            printf("0");
+            *out_ptr++ = '0';
         }
-        printf("%s\n", base10_str + sign_offset);
+        strcpy(out_ptr, base10_str + sign_offset);
     }
+    
+    // Remove trailing zeros before printing
+    remove_trailing_zeros(output);
+    printf("%s\n", output);
     
     mpfr_free_str(base10_str);
     mpfr_clear(value);
