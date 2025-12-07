@@ -7,7 +7,7 @@ with the C implementation.
 """
 
 import gmpy2
-from gmpy2 import mpfr
+from gmpy2 import mpfr  # type: ignore
 
 
 def remove_trailing_zeros(s: str) -> str:
@@ -47,7 +47,7 @@ def parse_mpfr_base32(s: str, precision: int = 256) -> mpfr:
         gmpy2 mpfr object
     """
     # Set precision context
-    with gmpy2.context(precision=precision):
+    with gmpy2.context(precision=precision):  # type: ignore
         # gmpy2 can directly parse base-32 strings using mpfr_set_str
         # The format expected by MPFR is the same as our input
         try:
@@ -126,7 +126,7 @@ def decimal_to_mpfr_base32(d, precision_bits: int = 256) -> str:
         Base-32 string in decimal notation
     """
     # Convert to mpfr with specified precision
-    with gmpy2.context(precision=precision_bits):
+    with gmpy2.context(precision=precision_bits):  # type: ignore
         if isinstance(d, mpfr):
             value = d
         else:
