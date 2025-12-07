@@ -17,6 +17,8 @@ from typing import List, Tuple, Dict
 import threading
 import queue
 
+import gmpy2
+
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
 
 
@@ -26,7 +28,6 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     Calculate required MPFR precision in bits based on grid resolution.
     Precision is rounded up to nearest multiple of 64.
     """
-    import gmpy2
     
     # Parse bounds as mpfr objects
     min_ca_dec = parse_mpfr_base32(min_ca, 256)
@@ -64,8 +65,7 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     Generate a grid of c = ca + i*cb points.
     Returns list of (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
     """
-    import gmpy2
-    
+
     # Parse bounds as mpfr objects with sufficient precision
     # Use 256 bits as default for grid generation
     min_ca_dec = parse_mpfr_base32(min_ca, 256)
