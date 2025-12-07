@@ -109,6 +109,25 @@ run_test "A non-zero z₀ with a cycling point c=-1" \
     "CAL 64 g@0 g@0 -1 0 100 2\nEXIT" \
     "CAL Y"
 
+# Test 6: CAL_VERBOSE basic functionality
+run_test "CAL_VERBOSE basic output" \
+    "CAL_VERBOSE 64 0 0 0 0 3 2\nEXIT" \
+    "CAL_STEP"
+
+# Test 7: CAL_VERBOSE shows multiple steps
+run_test "CAL_VERBOSE multiple steps" \
+    "CAL_VERBOSE 64 0 0 0 0 5 2\nEXIT" \
+    "CAL N.*00000000000000@0 00000000000000@0 5"
+
+# Test 8: CAL_VERBOSE with escape
+run_test "CAL_VERBOSE with escape" \
+    "CAL_VERBOSE 64 a@1 a@1 0 0 10 2\nEXIT" \
+    "CAL_STEP"
+
+run_test "CAL_VERBOSE escape shows Y" \
+    "CAL_VERBOSE 64 a@1 a@1 0 0 10 2\nEXIT" \
+    "CAL Y"
+
 echo "========================================"
 echo "Test Summary"
 echo "========================================"

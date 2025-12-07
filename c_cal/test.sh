@@ -218,6 +218,43 @@ run_test "Large iteration count" \
     "CAL 64 0 0 0 0 10000 2\nEXIT" \
     "CAL N"
 
+# Test 26: CAL_VERBOSE basic functionality
+run_test "CAL_VERBOSE outputs steps" \
+    "CAL_VERBOSE 64 0 0 0 0 3 2\nEXIT" \
+    "CAL_STEP"
+
+# Test 27: CAL_VERBOSE final output format
+run_test "CAL_VERBOSE final output" \
+    "CAL_VERBOSE 64 0 0 0 0 3 2\nEXIT" \
+    "CAL N.*@0.*@0 3"
+
+# Test 28: CAL_VERBOSE with escape
+run_test "CAL_VERBOSE with escape detection" \
+    "CAL_VERBOSE 64 a@1 a@1 0 0 10 2\nEXIT" \
+    "CAL Y"
+
+# Test 29: CAL_VERBOSE shows correct step count
+run_test "CAL_VERBOSE step numbering" \
+    "CAL_VERBOSE 64 0 0 0 0 5 2\nEXIT" \
+    "CAL_STEP.*5$"
+
+# Test 30: CAL_VERBOSE with zero iterations
+run_test "CAL_VERBOSE with zero iterations" \
+    "CAL_VERBOSE 64 0 0 0 0 0 2\nEXIT" \
+    "CAL N.*@0.*@0 0"
+
+# Test 31: CAL_VERBOSE with invalid parameters
+run_test_exact "CAL_VERBOSE with missing parameters" \
+    "CAL_VERBOSE 64 0 0\nEXIT" \
+    "BAD_CMD
+EXIT"
+
+# Test 32: CAL_VERBOSE lowercase (should fail)
+run_test_exact "Lowercase cal_verbose (should fail)" \
+    "cal_verbose 64 0 0 0 0 5 2\nEXIT" \
+    "BAD_CMD
+EXIT"
+
 echo "========================================"
 echo "Test Summary"
 echo "========================================"

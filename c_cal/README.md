@@ -82,6 +82,47 @@ EXIT
 EXIT
 ```
 
+#### Verbose Calculation Command (CAL_VERBOSE)
+
+**Input Format:**
+```
+CAL_VERBOSE <precision> <za> <zb> <ca> <cb> <max_iterations> <escape_radius>
+```
+
+Parameters are the same as the `CAL` command.
+
+**Output Format:**
+For each iteration, outputs:
+```
+CAL_STEP <za> <zb> <iteration_number>
+```
+
+After all iterations, outputs the same final result as `CAL`:
+```
+CAL <escaped> <final_za> <final_zb> <iterations>
+```
+
+**Example:**
+```bash
+./mandelbrot << EOF
+CAL_VERBOSE 64 0 0 -1 0 5 2
+EXIT
+EOF
+```
+
+**Output:**
+```
+CAL_STEP -10000000000000@1 00000000000000@0 1
+CAL_STEP 00000000000000@0 00000000000000@0 2
+CAL_STEP -10000000000000@1 00000000000000@0 3
+CAL_STEP 00000000000000@0 00000000000000@0 4
+CAL_STEP -10000000000000@1 00000000000000@0 5
+CAL N 00000000000000@0 00000000000000@0 5
+EXIT
+```
+
+This shows the oscillating behavior of the point c = -1, where z alternates between -1 and 0.
+
 #### Error Handling
 
 Invalid commands will produce:
@@ -131,12 +172,13 @@ Three test scripts are provided to verify the program's functionality:
 
 ### 1. Automated Test Suite (`test.sh`)
 
-Runs a comprehensive suite of 25+ automated tests covering:
-- Command parsing (EXIT, CAL, invalid commands)
+Runs a comprehensive suite of 33 automated tests covering:
+- Command parsing (EXIT, CAL, CAL_VERBOSE, invalid commands)
 - Edge cases (zero iterations, negative values, invalid input)
 - Escape detection
 - Base-32 number handling
 - Multiple command sequences
+- Verbose output validation
 
 ```bash
 cd c_cal
@@ -145,18 +187,31 @@ cd c_cal
 
 The script will display colored output showing which tests passed (green ✓) or failed (red ✗), along with a final summary.
 
-### 2. Manual Test Script (`manual_test.sh`)
+### 2. Agent Test Suite (`agent_test.sh`)
 
-Runs 10 common test cases with visible input/output for manual verification:
+Runs 9 specialized tests focusing on:
+- Edge cases (negative escape radius, zero escape radius)
+- Invalid inputs (@Inf@, @NaN@)
+- Cycling points
+- CAL_VERBOSE functionality
+
+```bash
+cd c_cal
+./agent_test.sh
+```
+
+### 3. Manual Test Script (`manual_test.sh`)
+
+Runs 13 common test cases with visible input/output for manual verification:
 
 ```bash
 cd c_cal
 ./manual_test.sh
 ```
 
-This is useful for understanding the program's behavior and debugging.
+This is useful for understanding the program's behavior and debugging, including demonstrations of CAL_VERBOSE output.
 
-### 3. Stress Test Script (`stress_test.sh`)
+### 4. Stress Test Script (`stress_test.sh`)
 
 Tests edge cases and performance limits:
 - Very high precision (1024 bits)
@@ -177,8 +232,15 @@ To build and run all tests:
 ```bash
 cd c_cal
 make
-./test.sh && ./manual_test.sh && ./stress_test.sh
+./test.sh && ./agent_test.sh && ./manual_test.sh && ./stress_test.sh
 ```
+
+## Implementation Notes
+
+- The `CAL_VERBOSE` command uses the same `process_cal_command()` function as `CAL`, with a verbose flag parameter to enable step-by-step output
+- Both commands share the same input validation and calculation logic
+- Verbose output is generated during iteration, showing the z value after each step
+- All arithmetic operations use MPFR for arbitrary precision
 
 ## License
 

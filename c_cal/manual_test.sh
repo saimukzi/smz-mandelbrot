@@ -78,6 +78,24 @@ echo "Command: CAL 64 0 0 0 0 0 2"
 echo -e "CAL 64 0 0 0 0 0 2\nEXIT" | ./mandelbrot
 echo ""
 
+# Test 11
+echo "Test 11: CAL_VERBOSE - Origin point with 3 iterations"
+echo "Command: CAL_VERBOSE 64 0 0 0 0 3 2"
+echo -e "CAL_VERBOSE 64 0 0 0 0 3 2\nEXIT" | ./mandelbrot
+echo ""
+
+# Test 12
+echo "Test 12: CAL_VERBOSE - Point that escapes"
+echo "Command: CAL_VERBOSE 64 a@1 a@1 0 0 5 2"
+echo -e "CAL_VERBOSE 64 a@1 a@1 0 0 5 2\nEXIT" | ./mandelbrot
+echo ""
+
+# Test 13
+echo "Test 13: CAL_VERBOSE - Classic Mandelbrot c=(-2,0) with few iterations"
+echo "Command: CAL_VERBOSE 64 0 0 -2 0 5 2"
+echo -e "CAL_VERBOSE 64 0 0 -2 0 5 2\nEXIT" | ./mandelbrot
+echo ""
+
 echo "========================================"
 echo "Manual tests completed!"
 echo "========================================"

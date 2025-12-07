@@ -106,14 +106,25 @@ void complex_square(mpfr_t result_real, mpfr_t result_imag, mpfr_t real, mpfr_t 
 /**
  * Process CAL command
  */
-void process_cal_command(const char *line) {
+void process_cal_command(const char *line, int verbose) {
     char za_str[MAX_LINE_LENGTH], zb_str[MAX_LINE_LENGTH];
     char ca_str[MAX_LINE_LENGTH], cb_str[MAX_LINE_LENGTH];
     long precision, max_iterations;
     char escape_radius_str[MAX_LINE_LENGTH];
     
-    // Parse the input
-    int parsed = sscanf(line, "CAL %ld %s %s %s %s %ld %s",
+    // Parse the input - skip "CAL " or "CAL_VERBOSE " prefix
+    const char *params_start = line;
+    if (strncmp(line, "CAL_VERBOSE ", 12) == 0) {
+        params_start = line + 12;
+    } else if (strncmp(line, "CAL ", 4) == 0) {
+        params_start = line + 4;
+    } else {
+        printf("BAD_CMD\n");
+        fflush(stdout);
+        return;
+    }
+    
+    int parsed = sscanf(params_start, "%ld %s %s %s %s %ld %s",
                         &precision, za_str, zb_str, ca_str, cb_str,
                         &max_iterations, escape_radius_str);
     
@@ -186,6 +197,18 @@ void process_cal_command(const char *line) {
         
         iterations = i + 1;
         
+        // Output verbose step information if requested
+        if (verbose) {
+            char *step_za_str = mpfr_to_base32(z_real);
+            char *step_zb_str = mpfr_to_base32(z_imag);
+            if (step_za_str != NULL && step_zb_str != NULL) {
+                printf("CAL_STEP %s %s %ld\n", step_za_str, step_zb_str, iterations);
+                fflush(stdout);
+            }
+            if (step_za_str) free(step_za_str);
+            if (step_zb_str) free(step_zb_str);
+        }
+        
         // Check if |z| > escape_radius (after computing new z)
         complex_abs(z_magnitude, z_real, z_imag);
         
@@ -243,9 +266,13 @@ int main() {
             break;
         }
         
+        // Check for CAL_VERBOSE command
+        if (strncmp(line, "CAL_VERBOSE ", 12) == 0) {
+            process_cal_command(line, 1);
+        }
         // Check for CAL command
-        if (strncmp(line, "CAL ", 4) == 0) {
-            process_cal_command(line);
+        else if (strncmp(line, "CAL ", 4) == 0) {
+            process_cal_command(line, 0);
         } else {
             printf("BAD_CMD\n");
             fflush(stdout);
