@@ -93,3 +93,8 @@ dmypy.json
 
 # pyenv
 .python-version
+
+# Output files
+*.csv
+py_box_cal/test_output.csv
+py_box_cal/*_mandelbrot.csv
