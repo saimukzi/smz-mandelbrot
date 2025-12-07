@@ -23,11 +23,13 @@ EXAMPLES = {
     },
     "spiral": {
         "description": "Spiral region near -0.75",
-        "args": ["-0.7520@0", "0.104@0", "-0.7515@0", "0.1045@0", "40", "5000", "2"],
+        "args": ["-0.7520@0", "0.104@0", "-0.7515@0",
+                 "0.1045@0", "40", "5000", "2"],
     },
     "mini_mandelbrot": {
         "description": "Mini Mandelbrot at -1.75",
-        "args": ["-1.752@0", "-0.001@0", "-1.748@0", "0.001@0", "50", "5000", "2"],
+        "args": ["-1.752@0", "-0.001@0", "-1.748@0",
+                 "0.001@0", "50", "5000", "2"],
     },
 }
 
@@ -38,20 +40,15 @@ def run_example(name, resolution=None, output=None):
         print(f"Error: Unknown example '{name}'")
         print(f"Available examples: {', '.join(EXAMPLES.keys())}")
         return False
-    
     example = EXAMPLES[name]
     args = example["args"].copy()
-    
     # Override resolution if provided
     if resolution:
         args[4] = str(resolution)
-    
     # Set output filename
     if output is None:
         output = f"{name}_mandelbrot.csv"
-    
     args.append(output)
-    
     print("=" * 70)
     print(f"Running Example: {name}")
     print(f"Description: {example['description']}")
@@ -64,13 +61,10 @@ def run_example(name, resolution=None, output=None):
     print(f"Output file: {args[7]}")
     print("=" * 70)
     print()
-    
     # Run the calculator
     script_dir = os.path.dirname(os.path.abspath(__file__))
     calculator = os.path.join(script_dir, "box_calculator.py")
-    
     cmd = [sys.executable, calculator] + args
-    
     try:
         subprocess.run(cmd, check=True)
         print()
@@ -99,26 +93,20 @@ def main():
         print()
         list_examples()
         sys.exit(1)
-    
     example_name = sys.argv[1]
-    
     if example_name == "list":
         list_examples()
         sys.exit(0)
-    
     resolution = None
     output = None
-    
     if len(sys.argv) >= 3:
         try:
             resolution = int(sys.argv[2])
         except ValueError:
             print(f"Error: Resolution must be an integer, got '{sys.argv[2]}'")
             sys.exit(1)
-    
     if len(sys.argv) >= 4:
         output = sys.argv[3]
-    
     success = run_example(example_name, resolution, output)
     sys.exit(0 if success else 1)
 
