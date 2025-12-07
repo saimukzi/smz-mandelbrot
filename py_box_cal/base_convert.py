@@ -8,7 +8,12 @@ Uses the mpfr_base32 module with gmpy2 for MPFR-compatible operations.
 
 import sys
 import argparse
-from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
+from pathlib import Path
+
+# Add py_common to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / 'py_common'))
+
+from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32  # type: ignore
 
 
 def remove_trailing_zeros(s: str) -> str:

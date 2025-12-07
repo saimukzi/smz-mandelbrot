@@ -15,10 +15,14 @@ from multiprocessing import cpu_count
 from typing import List, Tuple, Dict, Optional
 import threading
 import queue
+from pathlib import Path
+
+# Add py_common to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / 'py_common'))
 
 import gmpy2
 
-from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
+from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32  # type: ignore
 
 
 def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
