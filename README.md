@@ -17,7 +17,7 @@ A C program that performs high-precision Mandelbrot calculations for individual 
 
 **Features:**
 - Arbitrary-precision arithmetic using GNU MPFR
-- Base-32 number format for compact representation
+- Base-32 number format with decimal point notation for compact representation
 - Command-based interface (CAL, CAL_VERBOSE, EXIT)
 - Optimized for continuous calculation via stdin/stdout
 
@@ -86,14 +86,14 @@ Use `py_box_cal/box_calculator.py` for:
 ```bash
 cd c_cal
 echo "CAL 64 0 0 0 0 100 2" | ./mandelbrot
-# Output: CAL N 0@0 0@0 100
+# Output: CAL N 0 0 100
 ```
 
 ### Calculate a Grid
 
 ```bash
 cd py_box_cal
-python3 box_calculator.py -2 -1.5@0 1 1.5@0 50 1000 2 output.csv
+python3 box_calculator.py -2 -1.5 1 1.5 50 1000 2 output.csv
 ```
 
 ### Run Predefined Examples
@@ -108,12 +108,26 @@ python3 examples.py seahorse_valley 80  # Generate 80×80 grid
 
 Both tools use **MPFR base-32 format** for arbitrary precision:
 
-- Format: `[sign]mantissa@exponent`
-- Example: `1a@2` = mantissa "1a" (base-32) × 32²
-- Example: `0` = zero
-- Example: `-f@1` = negative number
+### Input Format (Flexible)
 
-Base-32 digits: 0-9, a-v (where a=10, b=11, ..., v=31)
+Accepts multiple base-32 formats:
+- **Decimal notation**: `1a.b` or `-0.g` (with decimal point) - e.g., `b` = 11, `-0.g` = -0.5
+- **Integer notation**: `1a` (without decimal point) - e.g., `b` = 11
+- **Exponent notation**: `1a@2` (mantissa × 32^exponent) - e.g., `-g@-1` = -0.5
+- **Zero**: `0`
+
+### Output Format
+
+C calculator outputs numbers in **decimal point notation**:
+- Format: `[sign]integer.fractional` or `[sign]integer`
+- Examples:
+  - `b` = 11 (decimal: 11)
+  - `-0.g` = -0.5 (decimal: -0.5)
+  - `1a.5` ≈ 26.15625 (decimal: 26 + 5/32)
+
+### Base-32 Digits
+
+Uses digits 0-9 and letters a-v (where a=10, b=11, ..., v=31)
 
 ## Algorithm
 

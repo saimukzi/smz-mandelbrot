@@ -56,10 +56,10 @@ CAL <precision> <za> <zb> <ca> <cb> <max_iterations> <escape_radius>
 ```
 
 - `<precision>`: Precision in bits for MPFR calculations
-- `<za>`, `<zb>`: Real and imaginary parts of z₀ (base-32 strings)
-- `<ca>`, `<cb>`: Real and imaginary parts of c (base-32 strings)
+- `<za>`, `<zb>`: Real and imaginary parts of z₀ (base-32 format)
+- `<ca>`, `<cb>`: Real and imaginary parts of c (base-32 format)
 - `<max_iterations>`: Maximum number of iterations
-- `<escape_radius>`: Escape radius R (base-32 string)
+- `<escape_radius>`: Escape radius R (base-32 format)
 
 **Output Format:**
 ```
@@ -67,7 +67,7 @@ CAL <escaped> <final_za> <final_zb> <iterations>
 ```
 
 - `<escaped>`: 'Y' if escaped, 'N' otherwise
-- `<final_za>`, `<final_zb>`: Final z value (base-32 strings)
+- `<final_za>`, `<final_zb>`: Final z value (base-32 decimal notation)
 - `<iterations>`: Number of iterations performed
 
 #### Exit Command
@@ -112,16 +112,18 @@ EOF
 
 **Output:**
 ```
-CAL_STEP -10000000000000@1 00000000000000@0 1
-CAL_STEP 00000000000000@0 00000000000000@0 2
-CAL_STEP -10000000000000@1 00000000000000@0 3
-CAL_STEP 00000000000000@0 00000000000000@0 4
-CAL_STEP -10000000000000@1 00000000000000@0 5
-CAL N 00000000000000@0 00000000000000@0 5
+CAL_STEP -1 0 1
+CAL_STEP 0 0 2
+CAL_STEP -1 0 3
+CAL_STEP 0 0 4
+CAL_STEP -1 0 5
+CAL N 0 0 5
 EXIT
 ```
 
 This shows the oscillating behavior of the point c = -1, where z alternates between -1 and 0.
+
+**Note:** Actual output format uses base-32 decimal notation (e.g., `-0.g` for -0.5), but the example above is simplified for clarity.
 
 #### Error Handling
 
@@ -135,17 +137,19 @@ BAD_CMD
 ```bash
 ./mandelbrot << EOF
 CAL 64 0 0 0 0 100 2
-CAL 128 0.1@1 0.2@1 -0.5@1 0 1000 2
+CAL 128 0.1 0.2 -0.5 0 1000 2
 EXIT
 EOF
 ```
+
+**Note:** You can also use integer notation (e.g., `1a` for 26) or exponent notation (e.g., `-g@-1` for -0.5) for input. Output will always use decimal notation.
 
 ### Interactive Usage
 
 ```bash
 ./mandelbrot
 CAL 64 0 0 0 0 100 2
-# Output: CAL N 0@0 0@0 100
+# Output: CAL N 0 0 100
 EXIT
 # Output: EXIT
 ```
@@ -160,11 +164,27 @@ Starting with z₀ and c provided in the input, the program iterates up to `max_
 
 ## Base-32 Number Format
 
-Numbers are represented in base-32 format using MPFR's string representation:
-- Format: `[sign]mantissa@exponent`
-- Example: `1a@2` represents the mantissa "1a" (base-32) times 32²
-- Example: `0` represents zero
-- Example: `-f@1` represents a negative number
+Numbers are represented in base-32 format with decimal point notation:
+
+### Input Format (Flexible)
+
+The program accepts multiple base-32 input formats:
+- **Decimal notation**: `1a.b` (with decimal point) - e.g., `b` = 11, `-0.g` = -0.5
+- **Integer notation**: `1a` (without decimal point) - e.g., `b` = 11
+- **Exponent notation**: `1a@2` (mantissa × 32^exponent) - e.g., `-g@-1` = -0.5
+- **Zero**: `0`
+
+### Output Format
+
+The program outputs numbers in **decimal point notation**:
+- Format: `[sign]integer.fractional` or `[sign]integer`
+- Examples:
+  - `b` = 11 (decimal: 11)
+  - `-0.g` = -0.5 (decimal: -0.5)
+  - `1a.5` = 58.15625 (decimal: 26 + 5/32)
+  - `0.00001a` ≈ 0.0000000391 (very small number)
+
+This format ensures consistent round-trip conversion and avoids ambiguity in parsing.
 
 ## Testing
 

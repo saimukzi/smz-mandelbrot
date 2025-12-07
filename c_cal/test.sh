@@ -105,11 +105,11 @@ run_test_exact "CAL with missing parameters" \
 # Test 5: Origin point (0, 0) with c = (0, 0) - should not escape
 run_test "Origin stays at origin" \
     "CAL 64 0 0 0 0 100 2\nEXIT" \
-    "CAL N.*@0.*@0 100"
+    "CAL N 0 0 100"
 
 # Test 6: Point that escapes immediately
 run_test "Point (10, 10) escapes quickly" \
-    "CAL 64 a@1 a@1 0 0 100 2\nEXIT" \
+    "CAL 64 a 0 0 0 100 2\nEXIT" \
     "CAL Y"
 
 # Test 7: Classic Mandelbrot point c = (-2, 0) on boundary, doesn't escape with R=2
@@ -124,23 +124,23 @@ run_test "Point c = (-3, 0) escapes" \
 
 # Test 8: Point c = (0.25, 0) - inside Mandelbrot set
 run_test "Point c = (0.25, 0) stays bounded" \
-    "CAL 64 0 0 0.8@0 0 100 2\nEXIT" \
+    "CAL 64 0 0 0.25 0 100 2\nEXIT" \
     "CAL N"
 
 # Test 9: Higher precision calculation
 run_test "High precision calculation" \
     "CAL 256 0 0 0 0 50 2\nEXIT" \
-    "CAL N.*@0.*@0 50"
+    "CAL N 0 0 50"
 
 # Test 10: Small number of iterations
 run_test "Small iteration count" \
     "CAL 64 0 0 0 0 1 2\nEXIT" \
-    "CAL N.*@0.*@0 1"
+    "CAL N 0 0 1"
 
 # Test 11: Zero iterations
 run_test "Zero iterations" \
     "CAL 64 0 0 0 0 0 2\nEXIT" \
-    "CAL N.*@0.*@0 0"
+    "CAL N 0 0 0"
 
 # Test 12: Multiple commands in sequence
 run_test "Multiple CAL commands" \
@@ -188,7 +188,7 @@ run_test "Large escape radius" \
 
 # Test 20: Small escape radius
 run_test "Small escape radius (0.5)" \
-    "CAL 64 0 0 1 0 100 0.8@0\nEXIT" \
+    "CAL 64 0 0 1 0 100 0.5\nEXIT" \
     "CAL Y"
 
 # Test 21: Case sensitivity of EXIT
@@ -210,7 +210,7 @@ run_test "Extra spaces in CAL command" \
 
 # Test 24: Test with base-32 format numbers
 run_test "Base-32 formatted input" \
-    "CAL 128 1@0 2@0 -1@0 0 1000 2\nEXIT" \
+    "CAL 128 1 2 -1 0 1000 2\nEXIT" \
     "CAL"
 
 # Test 25: Very large iteration count
@@ -226,11 +226,11 @@ run_test "CAL_VERBOSE outputs steps" \
 # Test 27: CAL_VERBOSE final output format
 run_test "CAL_VERBOSE final output" \
     "CAL_VERBOSE 64 0 0 0 0 3 2\nEXIT" \
-    "CAL N.*@0.*@0 3"
+    "CAL N 0 0 3"
 
 # Test 28: CAL_VERBOSE with escape
 run_test "CAL_VERBOSE with escape detection" \
-    "CAL_VERBOSE 64 a@1 a@1 0 0 10 2\nEXIT" \
+    "CAL_VERBOSE 64 a 0 0 0 10 2\nEXIT" \
     "CAL Y"
 
 # Test 29: CAL_VERBOSE shows correct step count
@@ -241,7 +241,7 @@ run_test "CAL_VERBOSE step numbering" \
 # Test 30: CAL_VERBOSE with zero iterations
 run_test "CAL_VERBOSE with zero iterations" \
     "CAL_VERBOSE 64 0 0 0 0 0 2\nEXIT" \
-    "CAL N.*@0.*@0 0"
+    "CAL N 0 0 0"
 
 # Test 31: CAL_VERBOSE with invalid parameters
 run_test_exact "CAL_VERBOSE with missing parameters" \

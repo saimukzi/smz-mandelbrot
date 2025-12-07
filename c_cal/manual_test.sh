@@ -26,8 +26,8 @@ echo ""
 
 # Test 2
 echo "Test 2: Point that escapes - z0=(10,10), c=(0,0)"
-echo "Command: CAL 64 a@1 a@1 0 0 100 2"
-echo -e "CAL 64 a@1 a@1 0 0 100 2\nEXIT" | ./mandelbrot
+echo "Command: CAL 64 a a 0 0 100 2"
+echo -e "CAL 64 a a 0 0 100 2\nEXIT" | ./mandelbrot
 echo ""
 
 # Test 3
@@ -38,8 +38,8 @@ echo ""
 
 # Test 4
 echo "Test 4: Point inside Mandelbrot set c=(0.25,0)"
-echo "Command: CAL 64 0 0 0.8@0 0 1000 2"
-echo -e "CAL 64 0 0 0.8@0 0 1000 2\nEXIT" | ./mandelbrot
+echo "Command: CAL 64 0 0 0.25 0 1000 2"
+echo -e "CAL 64 0 0 0.25 0 1000 2\nEXIT" | ./mandelbrot
 echo ""
 
 # Test 5
@@ -86,8 +86,8 @@ echo ""
 
 # Test 12
 echo "Test 12: CAL_VERBOSE - Point that escapes"
-echo "Command: CAL_VERBOSE 64 a@1 a@1 0 0 5 2"
-echo -e "CAL_VERBOSE 64 a@1 a@1 0 0 5 2\nEXIT" | ./mandelbrot
+echo "Command: CAL_VERBOSE 64 a 0 0 0 5 2"
+echo -e "CAL_VERBOSE 64 a 0 0 0 5 2\nEXIT" | ./mandelbrot
 echo ""
 
 # Test 13

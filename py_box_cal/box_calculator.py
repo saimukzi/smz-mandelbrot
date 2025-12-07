@@ -21,40 +21,62 @@ import queue
 def parse_mpfr_base32(s: str) -> Decimal:
     """
     Parse an MPFR base-32 string to a Python Decimal.
-    Format: [sign]mantissa@exponent
-    Example: "1a@2" = mantissa "1a" (base-32) * 32^2
+    Supports formats:
+    - Plain: "1a" or "-1a"  
+    - With decimal point: "1.a" or "-1.a" or "0.00001a"
+    - With exponent: "1a@2" (mantissa × 32^exponent)
     """
     getcontext().prec = 100  # High precision for Decimal operations
     
     if s == '0' or s == '0@0':
         return Decimal(0)
     
-    # Split into mantissa and exponent parts
-    if '@' not in s:
-        mantissa_str = s
-        exponent = 0
-    else:
-        mantissa_str, exp_str = s.split('@')
-        exponent = int(exp_str)
-    
     # Parse sign
-    if mantissa_str.startswith('-'):
+    if s.startswith('-'):
         sign = -1
-        mantissa_str = mantissa_str[1:]
+        s = s[1:]
     else:
         sign = 1
     
-    # Convert base-32 mantissa to decimal
-    mantissa_value = Decimal(0)
-    for i, digit in enumerate(mantissa_str):
+    # Split into mantissa and exponent parts
+    if '@' in s:
+        mantissa_str, exp_str = s.split('@')
+        base_exponent = int(exp_str)
+    else:
+        mantissa_str = s
+        base_exponent = 0
+    
+    # Parse mantissa (may contain decimal point)
+    if '.' in mantissa_str:
+        integer_part, fractional_part = mantissa_str.split('.')
+    else:
+        integer_part = mantissa_str
+        fractional_part = ''
+    
+    # Convert integer part from base-32
+    integer_value = Decimal(0)
+    for digit in integer_part:
         if digit.isdigit():
             digit_value = int(digit)
         else:
             digit_value = ord(digit.lower()) - ord('a') + 10
-        mantissa_value += Decimal(digit_value) * (Decimal(32) ** (-i))
+        integer_value = integer_value * 32 + Decimal(digit_value)
     
-    # Calculate final value: mantissa * 32^exponent
-    result = sign * mantissa_value * (Decimal(32) ** exponent)
+    # Convert fractional part from base-32
+    fractional_value = Decimal(0)
+    for i, digit in enumerate(fractional_part):
+        if digit.isdigit():
+            digit_value = int(digit)
+        else:
+            digit_value = ord(digit.lower()) - ord('a') + 10
+        fractional_value += Decimal(digit_value) * (Decimal(32) ** (-(i + 1)))
+    
+    # Combine and apply exponent
+    mantissa_value = integer_value + fractional_value
+    if base_exponent != 0:
+        mantissa_value *= (Decimal(32) ** base_exponent)
+    
+    result = sign * mantissa_value
     return result
 
 

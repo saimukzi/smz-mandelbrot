@@ -25,28 +25,90 @@ char* mpfr_to_base32(mpfr_t value) {
         return NULL;
     }
     
-    // mpfr_get_str returns mantissa and exponent separately
-    // We need to construct the full number with the exponent
-    size_t len = strlen(str);
-    char *result = malloc(len + 50); // Extra space for @, exponent, sign, etc.
+    // Handle special cases
+    if (strcmp(str, "@NaN@") == 0 || strcmp(str, "@Inf@") == 0 || strcmp(str, "-@Inf@") == 0) {
+        char *result = malloc(strlen(str) + 1);
+        if (result) {
+            strcpy(result, str);
+        }
+        mpfr_free_str(str);
+        return result;
+    }
     
+    // Handle zero
+    if (mpfr_zero_p(value)) {
+        mpfr_free_str(str);
+        char *result = malloc(2);
+        if (result) {
+            strcpy(result, "0");
+        }
+        return result;
+    }
+    
+    // mpfr_get_str returns mantissa and exponent where:
+    // - exp is the number of digits before the radix point
+    // - If exp > 0: integer part has 'exp' digits
+    // - If exp <= 0: number is 0.000...mantissa (with -exp leading zeros after point)
+    
+    size_t len = strlen(str);
+    int sign_offset = (str[0] == '-') ? 1 : 0;
+    size_t mantissa_len = len - sign_offset;
+    
+    // Calculate result size
+    size_t result_size;
+    if (exp > 0) {
+        if ((size_t)exp >= mantissa_len) {
+            // Need trailing zeros: mantissa000
+            result_size = len + (exp - mantissa_len) + 10;
+        } else {
+            // Need decimal point: mantissa -> man.tissa
+            result_size = len + 10;
+        }
+    } else {
+        // Need leading zeros: 0.000mantissa
+        result_size = len + (-exp) + 10;
+    }
+    
+    char *result = malloc(result_size);
     if (result == NULL) {
         mpfr_free_str(str);
         return NULL;
     }
     
-    // Handle special cases
-    if (strcmp(str, "@NaN@") == 0 || strcmp(str, "@Inf@") == 0 || strcmp(str, "-@Inf@") == 0) {
-        strcpy(result, str);
-        mpfr_free_str(str);
-        return result;
+    // Build the result string
+    char *dest = result;
+    char *src = str;
+    
+    // Copy sign if present
+    if (sign_offset) {
+        *dest++ = *src++;
     }
     
-    // Construct the string with exponent notation
-    if (str[0] == '-') {
-        sprintf(result, "-%s@%ld", str + 1, (long)exp);
+    if (exp > 0) {
+        if ((size_t)exp >= mantissa_len) {
+            // Copy all mantissa digits
+            strcpy(dest, src);
+            dest += mantissa_len;
+            // Add trailing zeros
+            for (long i = mantissa_len; i < exp; i++) {
+                *dest++ = '0';
+            }
+            *dest = '\0';
+        } else {
+            // Insert decimal point
+            strncpy(dest, src, exp);
+            dest += exp;
+            *dest++ = '.';
+            strcpy(dest, src + exp);
+        }
     } else {
-        sprintf(result, "%s@%ld", str, (long)exp);
+        // Leading zeros: 0.000...mantissa
+        *dest++ = '0';
+        *dest++ = '.';
+        for (long i = 0; i < -exp; i++) {
+            *dest++ = '0';
+        }
+        strcpy(dest, src);
     }
     
     mpfr_free_str(str);

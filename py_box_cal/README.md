@@ -14,7 +14,7 @@ A Python program that calculates the Mandelbrot set for a grid of complex values
 - **Parallel Execution**: Utilizes all CPU cores for maximum performance
 - **Adaptive Iteration**: Intelligently increases iteration counts only for un-escaped points
 - **Efficient Continuation**: Resumes from last z value instead of recalculating from z₀ = 0
-- **MPFR Base-32 Format**: Full support for arbitrary precision calculations
+- **MPFR Base-32 Format**: Full support for arbitrary precision calculations with decimal notation
 
 ## Usage
 
@@ -26,13 +26,13 @@ python3 box_calculator.py <min_ca> <min_cb> <max_ca> <max_cb> <resolution> <star
 
 | Argument | Description | Format |
 |----------|-------------|--------|
-| `<min_ca>` | Minimum real part of c | MPFR base-32 string |
-| `<min_cb>` | Minimum imaginary part of c | MPFR base-32 string |
-| `<max_ca>` | Maximum real part of c | MPFR base-32 string |
-| `<max_cb>` | Maximum imaginary part of c | MPFR base-32 string |
+| `<min_ca>` | Minimum real part of c | Base-32 (decimal, integer, or exponent notation) |
+| `<min_cb>` | Minimum imaginary part of c | Base-32 (decimal, integer, or exponent notation) |
+| `<max_ca>` | Maximum real part of c | Base-32 (decimal, integer, or exponent notation) |
+| `<max_cb>` | Maximum imaginary part of c | Base-32 (decimal, integer, or exponent notation) |
 | `<resolution>` | Grid points per axis (N×N grid) | Integer |
 | `<start_max_iterations>` | Initial iteration limit | Integer |
-| `<escape_radius>` | Escape radius R | MPFR base-32 string |
+| `<escape_radius>` | Escape radius R | Base-32 (decimal, integer, or exponent notation) |
 | `<output_path>` | Output CSV file path | String |
 
 ### Example
@@ -47,8 +47,10 @@ python3 box_calculator.py -2 -2 1 1 100 100 2 mandelbrot_grid.csv
 Calculate a high-resolution zoom into an interesting region:
 
 ```bash
-python3 box_calculator.py -0.8@0 -0.2@0 -0.7@0 -0.1@0 50 1000 2 zoom_region.csv
+python3 box_calculator.py -0.8 -0.2 -0.7 -0.1 50 1000 2 zoom_region.csv
 ```
+
+**Note:** Input accepts flexible base-32 formats (decimal like `-0.g`, integer like `b`, or exponent like `-g@-1`).
 
 ## Output Format
 
@@ -58,12 +60,12 @@ The program generates a CSV file with the following columns:
 |--------|-------------|
 | `X` | Grid X coordinate (0 to resolution-1) |
 | `Y` | Grid Y coordinate (0 to resolution-1) |
-| `CA` | Real part of c (MPFR base-32) |
-| `CB` | Imaginary part of c (MPFR base-32) |
+| `CA` | Real part of c (base-32, input format) |
+| `CB` | Imaginary part of c (base-32, input format) |
 | `ESCAPED` | 'Y' if escaped, 'N' otherwise |
 | `ITERATIONS` | Total iterations performed |
-| `FINAL_ZA` | Final real part of z (MPFR base-32) |
-| `FINAL_ZB` | Final imaginary part of z (MPFR base-32) |
+| `FINAL_ZA` | Final real part of z (base-32 decimal notation) |
+| `FINAL_ZB` | Final imaginary part of z (base-32 decimal notation) |
 
 The X and Y columns provide pixel/grid coordinates for easy image generation and visualization.
 
