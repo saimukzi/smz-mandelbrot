@@ -5,8 +5,22 @@ A Python program that calculates the Mandelbrot set for a grid of complex values
 ## Requirements
 
 - Python 3.6+
-- Standard Python libraries (no external dependencies)
+- gmpy2 library (Python bindings to GMP/MPFR/MPC for arbitrary precision arithmetic)
 - Built `c_cal/mandelbrot` executable in the parent directory
+
+### Installation
+
+Install Python dependencies from the project root:
+
+```bash
+pip install -r ../requirements.txt
+```
+
+**Note**: gmpy2 requires system libraries (GMP, MPFR, MPC). On most systems, these are automatically handled by pip. If you encounter build issues, install the development packages:
+
+- **Debian/Ubuntu**: `sudo apt-get install libgmp-dev libmpfr-dev libmpc-dev`
+- **Fedora/RHEL**: `sudo dnf install gmp-devel mpfr-devel libmpc-devel`
+- **macOS**: `brew install gmp mpfr libmpc`
 
 ## Features
 

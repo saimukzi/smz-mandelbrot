@@ -150,10 +150,15 @@ In practice, we iterate until:
 
 ### Python Grid Calculator
 - Python 3.6+
+- gmpy2 library (Python bindings to GMP/MPFR/MPC)
 - Built `c_cal/mandelbrot` executable
-- Standard Python libraries only (no external dependencies)
 
 ### Installing Dependencies
+
+**Python packages:**
+```bash
+pip install -r requirements.txt
+```
 
 **Ubuntu/Debian:**
 ```bash
@@ -205,19 +210,35 @@ python3 test.py
 smz-mandelbrot/
 ├── LICENSE                  # Public domain license
 ├── README.md               # This file
+├── requirements.txt        # Python dependencies (gmpy2)
 ├── c_cal/                  # C calculator
-│   ├── mandelbrot.c        # Source code
+│   ├── mandelbrot.c        # Main Mandelbrot calculator
+│   ├── mandelbrot          # Compiled executable
+│   ├── mpfr_base32.h       # Base-32 conversion header
+│   ├── mpfr_base32.c       # Base-32 conversion implementation
+│   ├── base_convert.c      # Base-10/32 converter utility
+│   ├── base_convert        # Compiled converter executable
+│   ├── test_base_convert.sh # Base converter tests
 │   ├── Makefile           # Build configuration
 │   ├── README.md          # Detailed documentation
 │   ├── test.sh            # Automated tests
 │   ├── agent_test.sh      # Agent tests
 │   ├── manual_test.sh     # Manual verification
 │   └── stress_test.sh     # Performance tests
-└── py_box_cal/            # Python grid calculator
-    ├── box_calculator.py  # Main grid calculator
-    ├── examples.py        # Predefined examples
-    ├── test.py           # Test suite
-    └── README.md         # Detailed documentation
+├── py_box_cal/            # Python grid calculator
+│   ├── box_calculator.py  # Main grid calculator
+│   ├── mpfr_base32.py     # Base-32 conversion module (gmpy2)
+│   ├── base_convert.py    # Base-10/32 converter utility
+│   ├── test_base_convert.py      # Base converter unit tests
+│   ├── test_cross_converter.py   # C/Python cross-validation tests
+│   ├── test_monkey_converter.py  # Fuzzing/monkey tests
+│   ├── examples.py        # Predefined examples
+│   ├── test.py           # Test suite
+│   ├── analyze_csv.py    # CSV analysis utility
+│   ├── QUICK_REFERENCE.md # Quick reference guide
+│   └── README.md         # Detailed documentation
+└── tmp/                   # Temporary files
+    └── full.csv           # Output data
 ```
 
 ## Contributing
