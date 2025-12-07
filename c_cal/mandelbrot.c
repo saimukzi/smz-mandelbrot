@@ -7,24 +7,6 @@
 #define MAX_LINE_LENGTH 4096
 
 /**
- * Calculate the absolute value (magnitude) of a complex number
- */
-void complex_abs(mpfr_t result, mpfr_t real, mpfr_t imag) {
-    mpfr_t temp1, temp2;
-    mpfr_init2(temp1, mpfr_get_prec(real));
-    mpfr_init2(temp2, mpfr_get_prec(real));
-    
-    // result = sqrt(real^2 + imag^2)
-    mpfr_sqr(temp1, real, MPFR_RNDN);
-    mpfr_sqr(temp2, imag, MPFR_RNDN);
-    mpfr_add(temp1, temp1, temp2, MPFR_RNDN);
-    mpfr_sqrt(result, temp1, MPFR_RNDN);
-    
-    mpfr_clear(temp1);
-    mpfr_clear(temp2);
-}
-
-/**
  * Complex number squaring: (a + bi)^2 = (a^2 - b^2) + (2ab)i
  */
 void complex_square(mpfr_t result_real, mpfr_t result_imag, mpfr_t real, mpfr_t imag) {
@@ -88,8 +70,8 @@ void process_cal_command(const char *line, int verbose) {
     }
     
     // Initialize MPFR variables
-    mpfr_t za, zb, ca, cb, escape_radius;
-    mpfr_t z_real, z_imag, z_magnitude;
+    mpfr_t za, zb, ca, cb, escape_radius, escape_radius_squared;
+    mpfr_t z_real, z_imag, z_magnitude_squared;
     mpfr_t temp_real, temp_imag;
     
     mpfr_init2(za, precision);
@@ -97,9 +79,10 @@ void process_cal_command(const char *line, int verbose) {
     mpfr_init2(ca, precision);
     mpfr_init2(cb, precision);
     mpfr_init2(escape_radius, precision);
+    mpfr_init2(escape_radius_squared, precision);
     mpfr_init2(z_real, precision);
     mpfr_init2(z_imag, precision);
-    mpfr_init2(z_magnitude, precision);
+    mpfr_init2(z_magnitude_squared, precision);
     mpfr_init2(temp_real, precision);
     mpfr_init2(temp_imag, precision);
     
@@ -126,13 +109,17 @@ void process_cal_command(const char *line, int verbose) {
         mpfr_clear(ca);
         mpfr_clear(cb);
         mpfr_clear(escape_radius);
+        mpfr_clear(escape_radius_squared);
         mpfr_clear(z_real);
         mpfr_clear(z_imag);
-        mpfr_clear(z_magnitude);
+        mpfr_clear(z_magnitude_squared);
         mpfr_clear(temp_real);
         mpfr_clear(temp_imag);
         return;
     }
+    
+    // Pre-calculate escape_radius^2 for faster comparison
+    mpfr_sqr(escape_radius_squared, escape_radius, MPFR_RNDN);
     
     // Initialize z with z0
     mpfr_set(z_real, za, MPFR_RNDN);
@@ -162,10 +149,12 @@ void process_cal_command(const char *line, int verbose) {
             if (step_zb_str) free(step_zb_str);
         }
         
-        // Check if |z| > escape_radius (after computing new z)
-        complex_abs(z_magnitude, z_real, z_imag);
+        // Check if |z|^2 > escape_radius^2 (faster than computing sqrt)
+        mpfr_sqr(temp_real, z_real, MPFR_RNDN);
+        mpfr_sqr(temp_imag, z_imag, MPFR_RNDN);
+        mpfr_add(z_magnitude_squared, temp_real, temp_imag, MPFR_RNDN);
         
-        if (mpfr_cmp(z_magnitude, escape_radius) > 0) {
+        if (mpfr_cmp(z_magnitude_squared, escape_radius_squared) > 0) {
             escaped = 'Y';
             break;
         }
@@ -192,9 +181,10 @@ void process_cal_command(const char *line, int verbose) {
     mpfr_clear(ca);
     mpfr_clear(cb);
     mpfr_clear(escape_radius);
+    mpfr_clear(escape_radius_squared);
     mpfr_clear(z_real);
     mpfr_clear(z_imag);
-    mpfr_clear(z_magnitude);
+    mpfr_clear(z_magnitude_squared);
     mpfr_clear(temp_real);
     mpfr_clear(temp_imag);
 }
