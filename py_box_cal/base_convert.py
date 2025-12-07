@@ -42,32 +42,60 @@ def convert_10_to_32(base10_str: str, precision_bits: int = 50) -> str:
         raise ValueError(f"Invalid base-10 number: {e}")
 
 
-def convert_32_to_10(base32_str: str, precision: int = 50) -> str:
+def convert_32_to_10(base32_str: str, precision_bits: int = 50) -> str:
     """
     Convert base-32 (MPFR format) string to base-10.
     
     Args:
         base32_str: Number in base-32 format (e.g., "-0.g", "a", "1@2")
-        precision: Number of decimal places to display (default: 50)
+        precision_bits: Precision in bits (like C's mpfr_prec_t)
     
     Returns:
-        Number in base-10 format
+        Number in base-10 format with trailing zeros
     """
+    import math
+    from decimal import Decimal, getcontext
+    
     try:
         # Parse base-32 string to Decimal
         value = parse_mpfr_base32(base32_str)
         
-        # Format as base-10 string
-        # Use string formatting to control precision
+        # Handle zero
         if value == 0:
             return "0"
         
-        # Convert to string with specified precision
-        result = f"{value:.{precision}f}"
+        # Convert bits to total decimal digits using the formula:
+        # digits = ceil(bits * log(2) / log(10)) + 1
+        # This matches MPFR's digit generation behavior
+        total_digits = math.ceil(precision_bits * math.log(2) / math.log(10)) + 1
         
-        # Remove trailing zeros and unnecessary decimal point
-        if '.' in result:
-            result = result.rstrip('0').rstrip('.')
+        # Determine how many digits are before the decimal point
+        abs_value = abs(value)
+        if abs_value >= 1:
+            # Count integer digits
+            integer_digits = len(str(int(abs_value)))
+            # For numbers >= 1, fractional part gets: total_digits - integer_digits
+            fractional_digits = max(0, total_digits - integer_digits)
+        else:
+            # For values < 1, all significant digits go after the decimal point
+            # Need to account for leading zeros after decimal point
+            # Find the position of the first non-zero digit
+            import re
+            temp_str = f"{abs_value:.50f}"  # Get enough precision to see the pattern
+            match = re.search(r'\.0*', temp_str)
+            if match:
+                leading_zeros = len(match.group()) - 1  # Subtract 1 for the decimal point
+            else:
+                leading_zeros = 0
+            
+            # MPFR counts significant digits in the mantissa
+            # For numbers with leading zeros, we need more fractional digits to display
+            fractional_digits = total_digits + leading_zeros
+        
+        # Format with the calculated precision
+        result = f"{value:.{fractional_digits}f}"
+        
+        # Do NOT remove trailing zeros - keep them like C does
         
         return result
     except Exception as e:

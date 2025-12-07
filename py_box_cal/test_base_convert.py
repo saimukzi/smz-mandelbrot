@@ -54,15 +54,25 @@ def test_roundtrip(test_name, precision, base10_value):
     result2 = subprocess.run(cmd2, capture_output=True, text=True)
     base10_result = result2.stdout.strip()
     
-    # Check if values match
-    if base10_value == base10_result:
-        print(f"{GREEN}✓{NC} {test_name} (10->32->10)")
-        PASSED += 1
-    else:
+    # Check if values match numerically (now result has trailing zeros)
+    try:
+        input_val = float(base10_value)
+        output_val = float(base10_result)
+        if abs(input_val - output_val) < 1e-10:
+            print(f"{GREEN}✓{NC} {test_name} (10->32->10)")
+            PASSED += 1
+        else:
+            print(f"{RED}✗{NC} {test_name} (10->32->10)")
+            print(f"  Input:    {base10_value}")
+            print(f"  Base-32:  {base32_value}")
+            print(f"  Output:   {base10_result}")
+            FAILED += 1
+    except ValueError:
         print(f"{RED}✗{NC} {test_name} (10->32->10)")
         print(f"  Input:    {base10_value}")
         print(f"  Base-32:  {base32_value}")
         print(f"  Output:   {base10_result}")
+        print(f"  Error: Could not parse as numbers")
         FAILED += 1
 
 
@@ -81,24 +91,24 @@ test_conversion("10TO32: Small fraction 0.03125", "10TO32", 64, "0.03125", "0.10
 test_conversion("10TO32: Integer 16", "10TO32", 64, "16", "g.0000000000000")
 test_conversion("10TO32: Integer 1", "10TO32", 64, "1", "1.0000000000000")
 
-# Test 11-20: Base-32 to Base-10 conversions
+# Test 11-20: Base-32 to Base-10 conversions (with trailing zeros like C)
 test_conversion("32TO10: Zero", "32TO10", 64, "0", "0")
-test_conversion("32TO10: Integer a (10)", "32TO10", 64, "a", "10")
-test_conversion("32TO10: Negative integer -a (-10)", "32TO10", 64, "-a", "-10")
-test_conversion("32TO10: Fraction -0.g (-0.5)", "32TO10", 64, "-0.g", "-0.5")
-test_conversion("32TO10: Fraction 0.8 (0.25)", "32TO10", 128, "0.8", "0.25")
-test_conversion("32TO10: Fraction -0.o (-0.75)", "32TO10", 64, "-0.o", "-0.75")
-test_conversion("32TO10: Large integer 100 (1024)", "32TO10", 64, "100", "1024")
-test_conversion("32TO10: Small fraction 0.1 (0.03125)", "32TO10", 64, "0.1", "0.03125")
-test_conversion("32TO10: Integer g (16)", "32TO10", 64, "g", "16")
-test_conversion("32TO10: Fraction 0.g (0.5)", "32TO10", 64, "0.g", "0.5")
+test_conversion("32TO10: Integer a (10)", "32TO10", 64, "a", "10.0000000000000000000")
+test_conversion("32TO10: Negative integer -a (-10)", "32TO10", 64, "-a", "-10.0000000000000000000")
+test_conversion("32TO10: Fraction -0.g (-0.5)", "32TO10", 64, "-0.g", "-0.500000000000000000000")
+test_conversion("32TO10: Fraction 0.8 (0.25)", "32TO10", 128, "0.8", "0.2500000000000000000000000000000000000000")
+test_conversion("32TO10: Fraction -0.o (-0.75)", "32TO10", 64, "-0.o", "-0.750000000000000000000")
+test_conversion("32TO10: Large integer 100 (1024)", "32TO10", 64, "100", "1024.00000000000000000")
+test_conversion("32TO10: Small fraction 0.1 (0.03125)", "32TO10", 64, "0.1", "0.0312500000000000000000")
+test_conversion("32TO10: Integer g (16)", "32TO10", 64, "g", "16.0000000000000000000")
+test_conversion("32TO10: Fraction 0.g (0.5)", "32TO10", 64, "0.g", "0.500000000000000000000")
 
 # Test 21-25: Exponent notation support (base-32 input)
-test_conversion("32TO10: Exponent notation 1@1 (32)", "32TO10", 64, "1@1", "32")
-test_conversion("32TO10: Exponent notation a@1 (320)", "32TO10", 64, "a@1", "320")
-test_conversion("32TO10: Exponent notation 1@-1 (0.03125)", "32TO10", 64, "1@-1", "0.03125")
-test_conversion("32TO10: Exponent notation g@0 (16)", "32TO10", 64, "g@0", "16")
-test_conversion("32TO10: Exponent notation -1@2 (-1024)", "32TO10", 64, "-1@2", "-1024")
+test_conversion("32TO10: Exponent notation 1@1 (32)", "32TO10", 64, "1@1", "32.0000000000000000000")
+test_conversion("32TO10: Exponent notation a@1 (320)", "32TO10", 64, "a@1", "320.000000000000000000")
+test_conversion("32TO10: Exponent notation 1@-1 (0.03125)", "32TO10", 64, "1@-1", "0.0312500000000000000000")
+test_conversion("32TO10: Exponent notation g@0 (16)", "32TO10", 64, "g@0", "16.0000000000000000000")
+test_conversion("32TO10: Exponent notation -1@2 (-1024)", "32TO10", 64, "-1@2", "-1024.00000000000000000")
 
 # Test 26-30: Round-trip conversions
 print()
