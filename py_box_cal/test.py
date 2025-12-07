@@ -81,10 +81,10 @@ def run_test():
         print()
         # Show first few results
         print("First 5 results:")
-        print(f"{'CA':<20} {'CB':<20} {'ESC':<5} {'ITERS':<10}")
-        print("-" * 60)
+        print(f"{'X':<5} {'Y':<5} {'CA':<20} {'CB':<20} {'ESC':<5} {'ITERS':<10}")
+        print("-" * 70)
         for i, row in enumerate(rows[:5]):
-            print(f"{row['CA']:<20} {row['CB']:<20} {row['ESCAPED']:<5} "
+            print(f"{row['X']:<5} {row['Y']:<5} {row['CA']:<20} {row['CB']:<20} {row['ESCAPED']:<5} "
                   f"{row['ITERATIONS']:<10}")
         if len(rows) > 5:
             print("...")

@@ -133,10 +133,10 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
 
 
 def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
-                 resolution: int) -> List[Tuple[str, str]]:
+                 resolution: int) -> List[Tuple[str, str, int, int]]:
     """
     Generate a grid of c = ca + i*cb points.
-    Returns list of (ca, cb) tuples in MPFR base-32 format.
+    Returns list of (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
     """
     # Parse bounds
     min_ca_dec = parse_mpfr_base32(min_ca)
@@ -157,7 +157,7 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
             
             ca_str = decimal_to_mpfr_base32(ca)
             cb_str = decimal_to_mpfr_base32(cb)
-            grid.append((ca_str, cb_str))
+            grid.append((ca_str, cb_str, i, j))
     
     return grid
 
@@ -321,10 +321,12 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
     
     # Initialize results storage
     results = {}
-    for idx, (ca, cb) in enumerate(grid):
+    for idx, (ca, cb, x, y) in enumerate(grid):
         results[idx] = {
             'ca': ca,
             'cb': cb,
+            'x': x,
+            'y': y,
             'za': '0',
             'zb': '0',
             'escaped': 'N',
@@ -390,13 +392,15 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
     # Write results to CSV
     print(f"Writing results to {output_path}", file=sys.stderr)
     with open(output_path, 'w', newline='') as csvfile:
-        fieldnames = ['CA', 'CB', 'ESCAPED', 'ITERATIONS', 'FINAL_ZA', 'FINAL_ZB']
+        fieldnames = ['X', 'Y', 'CA', 'CB', 'ESCAPED', 'ITERATIONS', 'FINAL_ZA', 'FINAL_ZB']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         
         for idx in range(total_points):
             r = results[idx]
             writer.writerow({
+                'X': r['x'],
+                'Y': r['y'],
                 'CA': r['ca'],
                 'CB': r['cb'],
                 'ESCAPED': r['escaped'],

@@ -56,12 +56,16 @@ The program generates a CSV file with the following columns:
 
 | Column | Description |
 |--------|-------------|
+| `X` | Grid X coordinate (0 to resolution-1) |
+| `Y` | Grid Y coordinate (0 to resolution-1) |
 | `CA` | Real part of c (MPFR base-32) |
 | `CB` | Imaginary part of c (MPFR base-32) |
 | `ESCAPED` | 'Y' if escaped, 'N' otherwise |
 | `ITERATIONS` | Total iterations performed |
 | `FINAL_ZA` | Final real part of z (MPFR base-32) |
 | `FINAL_ZB` | Final imaginary part of z (MPFR base-32) |
+
+The X and Y columns provide pixel/grid coordinates for easy image generation and visualization.
 
 ## Algorithm Details
 

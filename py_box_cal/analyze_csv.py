@@ -59,7 +59,9 @@ def analyze_csv(filename):
     if escaped_high_iter:
         print("Points with Highest Iterations (Escaped):")
         for row, iters in escaped_high_iter:
-            print(f"  c = {row['CA']} + {row['CB']}i")
+            x_coord = row.get('X', 'N/A')
+            y_coord = row.get('Y', 'N/A')
+            print(f"  [{x_coord}, {y_coord}] c = {row['CA']} + {row['CB']}i")
             print(f"    Iterations: {iters}, Final z = {row['FINAL_ZA']} + "
                   f"{row['FINAL_ZB']}i")
         print()
@@ -68,7 +70,9 @@ def analyze_csv(filename):
         boundary_points = [row for row in rows if row['ESCAPED'] == 'N'][:5]
         print("Sample Boundary Points (Not Escaped, showing up to 5):")
         for row in boundary_points:
-            print(f"  c = {row['CA']} + {row['CB']}i")
+            x_coord = row.get('X', 'N/A')
+            y_coord = row.get('Y', 'N/A')
+            print(f"  [{x_coord}, {y_coord}] c = {row['CA']} + {row['CB']}i")
             print(f"    Iterations: {row['ITERATIONS']}, "
                   f"Final z = {row['FINAL_ZA']} + {row['FINAL_ZB']}i")
         print()

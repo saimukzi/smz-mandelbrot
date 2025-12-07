@@ -120,18 +120,33 @@ The CSV can be imported into:
 - gnuplot
 - Any data visualization tool
 
+The CSV includes X and Y columns (grid coordinates 0 to resolution-1) for easy image generation.
+
 Example Python visualization:
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 df = pd.read_csv('mandelbrot.csv')
-# Convert ITERATIONS to log scale for better visualization
-df['log_iter'] = np.log1p(df['ITERATIONS'])
 
-# Simple scatter plot (if you have decimal conversion)
-plt.scatter(df['CA'], df['CB'], c=df['log_iter'], s=1, cmap='hot')
+# Method 1: Using X and Y grid coordinates directly
+resolution = df['X'].max() + 1
+grid = np.zeros((resolution, resolution))
+for _, row in df.iterrows():
+    grid[row['Y'], row['X']] = np.log1p(row['ITERATIONS'])
+
+plt.imshow(grid, cmap='hot', origin='lower')
 plt.colorbar(label='log(iterations)')
+plt.xlabel('X coordinate')
+plt.ylabel('Y coordinate')
+plt.show()
+
+# Method 2: Scatter plot with complex values (if you have decimal conversion)
+plt.scatter(df['CA'], df['CB'], c=np.log1p(df['ITERATIONS']), s=1, cmap='hot')
+plt.colorbar(label='log(iterations)')
+plt.xlabel('Real part (CA)')
+plt.ylabel('Imaginary part (CB)')
 plt.show()
 ```
 
