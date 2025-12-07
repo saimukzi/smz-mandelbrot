@@ -11,8 +11,7 @@ import csv
 import subprocess
 import math
 import argparse
-from decimal import Decimal, getcontext
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 from typing import List, Tuple, Dict, Optional
 import threading
 import queue

@@ -8,7 +8,6 @@ Uses the mpfr_base32 module with gmpy2 for MPFR-compatible operations.
 
 import sys
 import argparse
-import gmpy2
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32
 
 

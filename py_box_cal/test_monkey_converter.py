@@ -10,7 +10,6 @@ import subprocess
 import sys
 import os
 import random
-from decimal import Decimal
 
 # Colors for output
 GREEN = '\033[0;32m'
