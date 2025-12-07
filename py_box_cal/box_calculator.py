@@ -26,7 +26,7 @@ from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32  # type: ignor
 
 
 def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
-                       resolution: int) -> int:
+                       resolution_ca: int, resolution_cb: int) -> int:
     """
     Calculate required MPFR precision in bits based on grid resolution.
     Precision is rounded up to nearest multiple of 64.
@@ -39,10 +39,11 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     max_cb_dec = parse_mpfr_base32(max_cb, 256)
     
     # Calculate step sizes
-    if resolution > 1:
-        res_minus_1 = gmpy2.mpfr(resolution - 1)  # type: ignore
-        delta_ca = (max_ca_dec - min_ca_dec) / res_minus_1
-        delta_cb = (max_cb_dec - min_cb_dec) / res_minus_1
+    if resolution_ca > 1 and resolution_cb > 1:
+        res_ca_minus_1 = gmpy2.mpfr(resolution_ca - 1)  # type: ignore
+        res_cb_minus_1 = gmpy2.mpfr(resolution_cb - 1)  # type: ignore
+        delta_ca = (max_ca_dec - min_ca_dec) / res_ca_minus_1
+        delta_cb = (max_cb_dec - min_cb_dec) / res_cb_minus_1
     else:
         # Single point, use reasonable precision
         return 64
@@ -63,10 +64,13 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
 
 
 def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
-                 resolution: int) -> List[Tuple[str, str, int, int]]:
+                 resolution: int) -> Tuple[List[Tuple[str, str, int, int]], int, int]:
     """
     Generate a grid of c = ca + i*cb points.
-    Returns list of (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
+    Resolution applies to the real part (ca), and imaginary resolution (cb) is calculated
+    based on the aspect ratio of the region.
+    Returns tuple of (grid, resolution_ca, resolution_cb) where grid is list of
+    (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
     """
 
     # Parse bounds as mpfr objects with sufficient precision
@@ -76,27 +80,44 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     min_cb_dec = parse_mpfr_base32(min_cb, 256)
     max_cb_dec = parse_mpfr_base32(max_cb, 256)
     
+    # Calculate dimensions
+    range_ca = abs(max_ca_dec - min_ca_dec)
+    range_cb = abs(max_cb_dec - min_cb_dec)
+    
+    # Resolution applies to real part (ca)
+    resolution_ca = resolution
+    
+    # Calculate imaginary resolution based on aspect ratio
+    if range_ca > 0:
+        aspect_ratio = float(range_cb / range_ca)
+        resolution_cb = max(1, round((resolution_ca-1) * aspect_ratio)+1)
+    else:
+        resolution_cb = resolution
+    
     grid = []
     
-    for i in range(resolution):
-        for j in range(resolution):
-            if resolution > 1:
+    for i in range(resolution_ca):
+        for j in range(resolution_cb):
+            if resolution_ca > 1:
                 # Use gmpy2.mpfr for all arithmetic
                 i_mpfr = gmpy2.mpfr(i)  # type: ignore
-                j_mpfr = gmpy2.mpfr(j)  # type: ignore
-                res_minus_1 = gmpy2.mpfr(resolution - 1)  # type: ignore
-                
-                ca = min_ca_dec + (max_ca_dec - min_ca_dec) * i_mpfr / res_minus_1
-                cb = min_cb_dec + (max_cb_dec - min_cb_dec) * j_mpfr / res_minus_1
+                res_ca_minus_1 = gmpy2.mpfr(resolution_ca - 1)  # type: ignore
+                ca = min_ca_dec + (max_ca_dec - min_ca_dec) * i_mpfr / res_ca_minus_1
             else:
                 ca = min_ca_dec
+            
+            if resolution_cb > 1:
+                j_mpfr = gmpy2.mpfr(j)  # type: ignore
+                res_cb_minus_1 = gmpy2.mpfr(resolution_cb - 1)  # type: ignore
+                cb = min_cb_dec + (max_cb_dec - min_cb_dec) * j_mpfr / res_cb_minus_1
+            else:
                 cb = min_cb_dec
             
             ca_str = decimal_to_mpfr_base32(ca, 256)
             cb_str = decimal_to_mpfr_base32(cb, 256)
             grid.append((ca_str, cb_str, i, j))
     
-    return grid
+    return grid, resolution_ca, resolution_cb
 
 
 class MandelbrotWorker:
@@ -249,14 +270,14 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
         print(f"Error: mandelbrot executable not found at {mandelbrot_path}", file=sys.stderr)
         sys.exit(1)
     
-    # Calculate precision
-    precision = calculate_precision(min_ca, max_ca, min_cb, max_cb, resolution)
-    print(f"Using precision: {precision} bits", file=sys.stderr)
-    
-    # Generate grid
-    grid = generate_grid(min_ca, max_ca, min_cb, max_cb, resolution)
+    # Generate grid (this also calculates resolutions)
+    grid, resolution_ca, resolution_cb = generate_grid(min_ca, max_ca, min_cb, max_cb, resolution)
     total_points = len(grid)
-    print(f"Grid size: {resolution}x{resolution} = {total_points} points", file=sys.stderr)
+    print(f"Grid size: {resolution_ca}x{resolution_cb} = {total_points} points", file=sys.stderr)
+    
+    # Calculate precision
+    precision = calculate_precision(min_ca, max_ca, min_cb, max_cb, resolution_ca, resolution_cb)
+    print(f"Using precision: {precision} bits", file=sys.stderr)
     
     # Initialize results storage
     results = {}
@@ -392,7 +413,7 @@ Example:
     parser.add_argument('max_cb', type=str,
                         help='Maximum value for CB (imaginary part) in MPFR base-32 format')
     parser.add_argument('resolution', type=int,
-                        help='Grid resolution (number of points per dimension)')
+                        help='Grid resolution for real part (ca). Imaginary resolution calculated by aspect ratio.')
     parser.add_argument('start_max_iterations', type=int,
                         help='Starting maximum iterations for Mandelbrot calculation')
     parser.add_argument('escape_radius', type=str,
