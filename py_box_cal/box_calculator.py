@@ -324,12 +324,20 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
             results[idx]['za'] = res['final_za']
             results[idx]['zb'] = res['final_zb']
         
+        # Calculate escape percentage
+        escape_percentage = (newly_escaped / len(unescape_indices)) * 100
+        
         # Check if no points escaped in this round
         if newly_escaped == 0:
             print(f"No new escaped points after {len(unescape_indices)} iterations, stopping", file=sys.stderr)
             break
         
-        print(f"Points escaped in this round: {newly_escaped}/{len(unescape_indices)}", file=sys.stderr)
+        # Check if less than 1% escaped
+        if escape_percentage < 1.0:
+            print(f"Less than 1% of points escaped ({escape_percentage:.2f}%), stopping", file=sys.stderr)
+            break
+        
+        print(f"Points escaped in this round: {newly_escaped}/{len(unescape_indices)} ({escape_percentage:.2f}%)", file=sys.stderr)
         
         # Double max_iterations for next round
         max_iterations *= 2
