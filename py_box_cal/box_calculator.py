@@ -41,11 +41,24 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     Precision is rounded up to nearest multiple of 64.
     """
     
-    # Parse bounds as mpfr objects
-    min_ca_dec = parse_mpfr_base32(min_ca, 256)
-    max_ca_dec = parse_mpfr_base32(max_ca, 256)
-    min_cb_dec = parse_mpfr_base32(min_cb, 256)
-    max_cb_dec = parse_mpfr_base32(max_cb, 256)
+    # Estimate an initial precision for parsing from the input string lengths.
+    # Each base-32 digit encodes ~5 bits. Add a safety margin and round up to
+    # a 64-bit boundary for parsing so we can compute deltas reliably.
+    max_digits = max(
+        _count_base32_digits(min_ca),
+        _count_base32_digits(max_ca),
+        _count_base32_digits(min_cb),
+        _count_base32_digits(max_cb),
+    )
+    estimated_bits = max_digits * 5
+    parse_precision = ((estimated_bits + 64 + 63) // 64) * 64
+    parse_precision = max(64, parse_precision)
+
+    # Parse bounds as mpfr objects using the estimated parse precision
+    min_ca_dec = parse_mpfr_base32(min_ca, parse_precision)
+    max_ca_dec = parse_mpfr_base32(max_ca, parse_precision)
+    min_cb_dec = parse_mpfr_base32(min_cb, parse_precision)
+    max_cb_dec = parse_mpfr_base32(max_cb, parse_precision)
     
     # Calculate step sizes (max bounds are exclusive)
     if resolution_ca > 1 and resolution_cb > 1:
