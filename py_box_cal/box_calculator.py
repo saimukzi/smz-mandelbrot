@@ -343,10 +343,14 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
     max_total_iterations = 10000000  # Safety limit
     
     while True:
-        # Find points that haven't escaped
-        unescape_indices = [idx for idx in range(total_points) 
-                           if results[idx]['escaped'] == 'N' 
-                           and results[idx]['iterations'] < max_total_iterations]
+        # Find points that haven't escaped and still need more iterations
+        # (we treat `max_iterations` as the target cumulative iterations for this round)
+        unescape_indices = [
+            idx for idx in range(total_points)
+            if results[idx]['escaped'] == 'N'
+            and results[idx]['iterations'] < max_total_iterations
+            and results[idx]['iterations'] < max_iterations
+        ]
         
         if not unescape_indices:
             print("All points processed", file=sys.stderr)
@@ -355,11 +359,17 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
         print(f"Iteration round: max_iterations={max_iterations}, processing {len(unescape_indices)} points", 
               file=sys.stderr)
         
-        # Submit tasks for unescape points
+        # Submit tasks for unescape points. Send the number of iterations to run
+        # in this round (the difference between the target `max_iterations`
+        # and the point's current cumulative iterations), so we don't re-run
+        # iterations that were already performed.
         for idx in unescape_indices:
             r = results[idx]
+            iterations_to_run = int(max_iterations - r['iterations'])
+            if iterations_to_run <= 0:
+                continue
             pool.submit(idx, precision, r['za'], r['zb'], r['ca'], r['cb'],
-                       max_iterations, escape_radius)
+                       iterations_to_run, escape_radius)
         
         # Wait and collect results
         pool.wait()
