@@ -20,6 +20,9 @@ def run_test():
     resolution = "5"
     start_max_iterations = "100"
     escape_radius = "2"
+    # Determine script directory early so paths are correct
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Ensure output is written into the py_box_cal directory
     output_path = os.path.join(script_dir, "test_output.csv")
     print("=" * 60)
