@@ -216,7 +216,22 @@ def calculate_new_max_iterations(data: List[Dict],
     
     new_max_iterations = round(max_iterations_from_csv * M**0.5)
     """
-    max_iterations = max(point['ITERATIONS'] for point in data)
+    if not data:
+        raise ValueError("No data points available to calculate max iterations")
+
+    # Prefer iterations from points that actually escaped (ESCAPED == 'Y').
+    # Only consider ESCAPED == 'N' if there are no ESCAPED == 'Y' points.
+    escaped_points = [point for point in data if point.get('ESCAPED') == 'Y']
+    if escaped_points:
+        max_iterations = max(point['ITERATIONS'] for point in escaped_points)
+    else:
+        non_escaped_points = [point for point in data if point.get('ESCAPED') == 'N']
+        if non_escaped_points:
+            max_iterations = max(point['ITERATIONS'] for point in non_escaped_points)
+        else:
+            # Fallback: if ESCAPED value is not 'Y' or 'N' (or missing), take overall max
+            max_iterations = max(point['ITERATIONS'] for point in data)
+
     new_max_iterations = round(max_iterations * (magnification_ratio ** 0.5))
     return new_max_iterations
 
