@@ -1,0 +1,3 @@
+python py_box_cal/box_calculator.py --help
+
+python py_box_cal/box_calculator.py -3 -2 1 2 64 100 4 tmp/full-64.csv
