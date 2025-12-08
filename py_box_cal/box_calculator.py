@@ -25,6 +25,15 @@ import gmpy2
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32  # type: ignore
 
 
+def _count_base32_digits(s: str) -> int:
+    """Count alphanumeric characters in a base-32 string.
+
+    This treats only letters and digits as base-32 'digits', ignoring sign
+    and the radix point. Returns an integer count.
+    """
+    return sum(1 for c in s if c.isalnum())
+
+
 def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
                        resolution_ca: int, resolution_cb: int) -> int:
     """
@@ -73,12 +82,28 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
     """
 
-    # Parse bounds as mpfr objects with sufficient precision
-    # Use 256 bits as default for grid generation
-    min_ca_dec = parse_mpfr_base32(min_ca, 256)
-    max_ca_dec = parse_mpfr_base32(max_ca, 256)
-    min_cb_dec = parse_mpfr_base32(min_cb, 256)
-    max_cb_dec = parse_mpfr_base32(max_cb, 256)
+    # Determine precision (bits) from the length of the provided base-32 strings.
+    # Each base-32 digit encodes ~5 bits. Count alphanumeric characters as digits
+    # (this ignores sign and the dot). Add a safety margin and round up to
+    # a 64-bit boundary to match the project's precision convention.
+    max_digits = max(
+        _count_base32_digits(min_ca),
+        _count_base32_digits(max_ca),
+        _count_base32_digits(min_cb),
+        _count_base32_digits(max_cb),
+    )
+
+    # Estimate bits: ~5 bits per base-32 digit
+    estimated_bits = max_digits * 5
+    # Add safety margin (64 bits) and round up to nearest multiple of 64
+    precision = ((estimated_bits + 64 + 63) // 64) * 64
+    precision = max(64, precision)
+
+    # Parse bounds as mpfr objects with computed precision
+    min_ca_dec = parse_mpfr_base32(min_ca, precision)
+    max_ca_dec = parse_mpfr_base32(max_ca, precision)
+    min_cb_dec = parse_mpfr_base32(min_cb, precision)
+    max_cb_dec = parse_mpfr_base32(max_cb, precision)
     
     # Calculate dimensions
     range_ca = abs(max_ca_dec - min_ca_dec)
@@ -114,8 +139,8 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
             else:
                 cb = min_cb_dec
             
-            ca_str = decimal_to_mpfr_base32(ca, 256)
-            cb_str = decimal_to_mpfr_base32(cb, 256)
+            ca_str = decimal_to_mpfr_base32(ca, precision)
+            cb_str = decimal_to_mpfr_base32(cb, precision)
             grid.append((ca_str, cb_str, i, j))
     
     return grid, resolution_ca, resolution_cb
