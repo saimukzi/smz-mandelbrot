@@ -41,7 +41,7 @@ c_cal/mandelbrot
 *.pdb
 
 # Editor and IDE files
-.vscode/
+.vscode/*
 .idea/
 *.swp
 *.swo
@@ -101,3 +101,6 @@ dmypy.json
 *.csv
 py_box_cal/test_output.csv
 py_box_cal/*_mandelbrot.csv
+
+# exceptions
+!.vscode/settings.json
