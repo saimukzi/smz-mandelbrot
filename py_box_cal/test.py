@@ -20,7 +20,11 @@ def run_test():
     resolution = "5"
     start_max_iterations = "100"
     escape_radius = "2"
-    output_path = "test_output.csv"
+    # Determine script directory early so paths are correct
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Ensure output is written into the py_box_cal directory
+    output_path = os.path.join(script_dir, "test_output.csv")
     print("=" * 60)
     print("Mandelbrot Grid Calculator Test")
     print("=" * 60)
@@ -41,9 +45,10 @@ def run_test():
     print(f"Found mandelbrot executable: {mandelbrot_path}")
     print()
     # Run the calculator
+    box_calculator_script = os.path.join(script_dir, "box_calculator.py")
     cmd = [
         sys.executable,
-        "box_calculator.py",
+        box_calculator_script,
         min_ca, min_cb, max_ca, max_cb,
         resolution, start_max_iterations,
         escape_radius, output_path

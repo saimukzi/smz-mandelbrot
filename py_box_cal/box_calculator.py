@@ -25,6 +25,15 @@ import gmpy2
 from mpfr_base32 import parse_mpfr_base32, decimal_to_mpfr_base32  # type: ignore
 
 
+def _count_base32_digits(s: str) -> int:
+    """Count alphanumeric characters in a base-32 string.
+
+    This treats only letters and digits as base-32 'digits', ignoring sign
+    and the radix point. Returns an integer count.
+    """
+    return sum(1 for c in s if c.isalnum())
+
+
 def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str, 
                        resolution_ca: int, resolution_cb: int) -> int:
     """
@@ -32,11 +41,24 @@ def calculate_precision(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     Precision is rounded up to nearest multiple of 64.
     """
     
-    # Parse bounds as mpfr objects
-    min_ca_dec = parse_mpfr_base32(min_ca, 256)
-    max_ca_dec = parse_mpfr_base32(max_ca, 256)
-    min_cb_dec = parse_mpfr_base32(min_cb, 256)
-    max_cb_dec = parse_mpfr_base32(max_cb, 256)
+    # Estimate an initial precision for parsing from the input string lengths.
+    # Each base-32 digit encodes ~5 bits. Add a safety margin and round up to
+    # a 64-bit boundary for parsing so we can compute deltas reliably.
+    max_digits = max(
+        _count_base32_digits(min_ca),
+        _count_base32_digits(max_ca),
+        _count_base32_digits(min_cb),
+        _count_base32_digits(max_cb),
+    )
+    estimated_bits = max_digits * 5
+    parse_precision = ((estimated_bits + 64 + 63) // 64) * 64
+    parse_precision = max(64, parse_precision)
+
+    # Parse bounds as mpfr objects using the estimated parse precision
+    min_ca_dec = parse_mpfr_base32(min_ca, parse_precision)
+    max_ca_dec = parse_mpfr_base32(max_ca, parse_precision)
+    min_cb_dec = parse_mpfr_base32(min_cb, parse_precision)
+    max_cb_dec = parse_mpfr_base32(max_cb, parse_precision)
     
     # Calculate step sizes (max bounds are exclusive)
     if resolution_ca > 1 and resolution_cb > 1:
@@ -73,12 +95,28 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
     (ca, cb, x, y) tuples in MPFR base-32 format with grid coordinates.
     """
 
-    # Parse bounds as mpfr objects with sufficient precision
-    # Use 256 bits as default for grid generation
-    min_ca_dec = parse_mpfr_base32(min_ca, 256)
-    max_ca_dec = parse_mpfr_base32(max_ca, 256)
-    min_cb_dec = parse_mpfr_base32(min_cb, 256)
-    max_cb_dec = parse_mpfr_base32(max_cb, 256)
+    # Determine precision (bits) from the length of the provided base-32 strings.
+    # Each base-32 digit encodes ~5 bits. Count alphanumeric characters as digits
+    # (this ignores sign and the dot). Add a safety margin and round up to
+    # a 64-bit boundary to match the project's precision convention.
+    max_digits = max(
+        _count_base32_digits(min_ca),
+        _count_base32_digits(max_ca),
+        _count_base32_digits(min_cb),
+        _count_base32_digits(max_cb),
+    )
+
+    # Estimate bits: ~5 bits per base-32 digit
+    estimated_bits = max_digits * 5
+    # Add safety margin (64 bits) and round up to nearest multiple of 64
+    precision = ((estimated_bits + 64 + 63) // 64) * 64
+    precision = max(64, precision)
+
+    # Parse bounds as mpfr objects with computed precision
+    min_ca_dec = parse_mpfr_base32(min_ca, precision)
+    max_ca_dec = parse_mpfr_base32(max_ca, precision)
+    min_cb_dec = parse_mpfr_base32(min_cb, precision)
+    max_cb_dec = parse_mpfr_base32(max_cb, precision)
     
     # Calculate dimensions
     range_ca = abs(max_ca_dec - min_ca_dec)
@@ -114,8 +152,8 @@ def generate_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str,
             else:
                 cb = min_cb_dec
             
-            ca_str = decimal_to_mpfr_base32(ca, 256)
-            cb_str = decimal_to_mpfr_base32(cb, 256)
+            ca_str = decimal_to_mpfr_base32(ca, precision)
+            cb_str = decimal_to_mpfr_base32(cb, precision)
             grid.append((ca_str, cb_str, i, j))
     
     return grid, resolution_ca, resolution_cb
@@ -305,10 +343,14 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
     max_total_iterations = 10000000  # Safety limit
     
     while True:
-        # Find points that haven't escaped
-        unescape_indices = [idx for idx in range(total_points) 
-                           if results[idx]['escaped'] == 'N' 
-                           and results[idx]['iterations'] < max_total_iterations]
+        # Find points that haven't escaped and still need more iterations
+        # (we treat `max_iterations` as the target cumulative iterations for this round)
+        unescape_indices = [
+            idx for idx in range(total_points)
+            if results[idx]['escaped'] == 'N'
+            and results[idx]['iterations'] < max_total_iterations
+            and results[idx]['iterations'] < max_iterations
+        ]
         
         if not unescape_indices:
             print("All points processed", file=sys.stderr)
@@ -317,11 +359,17 @@ def calculate_mandelbrot_grid(min_ca: str, max_ca: str, min_cb: str, max_cb: str
         print(f"Iteration round: max_iterations={max_iterations}, processing {len(unescape_indices)} points", 
               file=sys.stderr)
         
-        # Submit tasks for unescape points
+        # Submit tasks for unescape points. Send the number of iterations to run
+        # in this round (the difference between the target `max_iterations`
+        # and the point's current cumulative iterations), so we don't re-run
+        # iterations that were already performed.
         for idx in unescape_indices:
             r = results[idx]
+            iterations_to_run = int(max_iterations - r['iterations'])
+            if iterations_to_run <= 0:
+                continue
             pool.submit(idx, precision, r['za'], r['zb'], r['ca'], r['cb'],
-                       max_iterations, escape_radius)
+                       iterations_to_run, escape_radius)
         
         # Wait and collect results
         pool.wait()

@@ -103,10 +103,13 @@ def calculate_complexity_score(point: Dict, grid_index: Dict[Tuple[int, int], Di
     return score
 
 
+# --- Constants ---
+TOP_PERCENTILE = 0.01  # Top 1% of points are considered for the new zoom center
+
 def select_zoom_center(boundary_points: List[Dict], 
                       grid_index: Dict[Tuple[int, int], Dict]) -> Dict:
     """
-    Select a zoom center from the top 1% of points by complexity score.
+    Select a zoom center from the top percentile of points by complexity score.
     Returns a random point from this top tier.
     """
     if not boundary_points:
@@ -121,8 +124,8 @@ def select_zoom_center(boundary_points: List[Dict],
     # Sort by score (descending)
     scored_points.sort(key=lambda x: x[0], reverse=True)
     
-    # Select top 1% (at least 1 point)
-    top_count = max(1, int(len(scored_points) * 0.01))
+    # Select top percentile (at least 1 point)
+    top_count = max(1, int(len(scored_points) * TOP_PERCENTILE))
     top_points = [point for score, point in scored_points[:top_count]]
     
     # Randomly select from top points
@@ -162,11 +165,16 @@ def calculate_new_boundaries(center_ca: str, center_cb: str,
     delta_c = min(abs(new_width), abs(new_height)) / 100
     
     if delta_c > 0:
-        # Calculate required bits: log2(1/delta_c) + safety margin
+        # Precision Calculation Rationale:
+        # 1. log2(1/delta_c): Determines the number of bits needed to represent the
+        #    smallest distance between two points in the new, smaller box.
+        # 2. +32: Adds a safety margin to prevent precision loss during intermediate
+        #    calculations (e.g., subtractions, divisions).
+        # 3. Round up to nearest 64: MPFR/GMP operations are often optimized for
+        #    multiples of 64 bits.
         required_bits = math.ceil(math.log2(float(1 / delta_c))) + 32
-        # Round up to nearest multiple of 64
         precision = ((required_bits + 63) // 64) * 64
-        precision = max(64, precision)  # Minimum 64 bits
+        precision = max(64, precision)  # Ensure a minimum precision of 64 bits
     else:
         precision = 64
     
@@ -206,10 +214,26 @@ def calculate_new_max_iterations(data: List[Dict],
     """
     Calculate new maximum iteration count based on the maximum iterations in the data.
     
-    Returns the maximum iteration count from the CSV without scaling.
+    new_max_iterations = round(max_iterations_from_csv * M**0.5)
     """
-    max_iterations = max(point['ITERATIONS'] for point in data)
-    return max_iterations
+    if not data:
+        raise ValueError("No data points available to calculate max iterations")
+
+    # Prefer iterations from points that actually escaped (ESCAPED == 'Y').
+    # Only consider ESCAPED == 'N' if there are no ESCAPED == 'Y' points.
+    escaped_points = [point for point in data if point.get('ESCAPED') == 'Y']
+    if escaped_points:
+        max_iterations = max(point['ITERATIONS'] for point in escaped_points)
+    else:
+        non_escaped_points = [point for point in data if point.get('ESCAPED') == 'N']
+        if non_escaped_points:
+            max_iterations = max(point['ITERATIONS'] for point in non_escaped_points)
+        else:
+            # Fallback: if ESCAPED value is not 'Y' or 'N' (or missing), take overall max
+            max_iterations = max(point['ITERATIONS'] for point in data)
+
+    new_max_iterations = round(max_iterations * (magnification_ratio ** 0.5))
+    return new_max_iterations
 
 
 def main():
@@ -237,9 +261,15 @@ with 3× magnification centered on a high-complexity boundary point.
                        help='Path to CSV output from box_calculator.py')
     parser.add_argument('magnification_ratio', type=float,
                        help='Zoom magnification factor (e.g., 2.0 = 2× zoom, must be > 1.0)')
+    parser.add_argument('--seed', type=int, default=None,
+                       help='Seed for the random number generator for reproducible results')
     
     args = parser.parse_args()
     
+    # Seed the random number generator if a seed is provided
+    if args.seed is not None:
+        random.seed(args.seed)
+
     # Validate magnification ratio
     if args.magnification_ratio <= 1.0:
         parser.error("magnification_ratio must be greater than 1.0")
