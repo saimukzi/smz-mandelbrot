@@ -1,7 +1,5 @@
 # SMZ Mandelbrot Development Guide
 
-> **Note**: This file should be kept in sync with `.github/copilot-instructions.md`
-
 ## Architecture Overview
 
 This is a high-precision Mandelbrot set calculator split into multiple components:
